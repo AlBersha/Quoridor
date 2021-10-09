@@ -1,4 +1,5 @@
 ﻿using System;
+using QuoridorConsoleView;
 
 namespace Quoridor
 {
@@ -6,7 +7,7 @@ namespace Quoridor
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello World!");
+            
         }
     }
 }
