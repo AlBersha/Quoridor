@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
+using Quoridor.Model;
 
 namespace Quoridor.View
 {
@@ -9,11 +10,11 @@ namespace Quoridor.View
     {
         private int FieldWidth { get; set; } = 9;
         private int FieldHeight { get; set; } = 9;
-        private List<Point> playersPosition { get; set; }
+        private List<Player> playersPosition { get; set; }
 
         public ConsoleView()
         { 
-            playersPosition = new List<Point>{new (0, 4), new (8, 4)};
+            playersPosition = new List<Player> {new ("A", new Point(0, 4)), new ("B", new Point(8, 4))};
         }
 
         public ConsoleView(int width, int height)
@@ -24,36 +25,35 @@ namespace Quoridor.View
 
         public void PrintGameField()
         {
-            var playersInRow = new List<Point>(); 
+            var playersInRow = new List<Player>(); 
+            Console.WriteLine(" ——— ——— ——— ——— ——— ——— ——— ——— ——— ");
             for (var i = 0; i < FieldHeight; i++) 
             { 
-                Console.WriteLine(" ———  ———  ———  ———  ———  ———  ———  ———  ——— "); 
-                playersInRow.AddRange(playersPosition.Where(point => point.X == i)); 
+                playersInRow.AddRange(playersPosition.Where(point => point.Position.X == i)); 
                 PrintRow(playersInRow); 
-                Console.WriteLine(" ———  ———  ———  ———  ———  ———  ———  ———  ——— "); 
+                Console.WriteLine(" ——— ——— ——— ——— ——— ——— ——— ——— ——— ");
                 playersInRow.Clear();
             }
         }
 
-        private void PrintRow(List<Point> playersInRow)
+        private void PrintRow(List<Player> playersInRow)
         {
-            var IsCellEmpty = true;
+            Console.Write("|");
             for (var j = 0; j < FieldWidth; j++)
             {
-             if (playersInRow.Any(player => player.Y == j))
-             {
-                 IsCellEmpty = false;
-             }
-             if (playersInRow.Count != 0 && !IsCellEmpty)
-             {
-                 Console.Write("|***|");
-             }
-             else
-             {
-                 Console.Write("|   |");
-             }
-
-             IsCellEmpty = true;
+                if (playersInRow.Count != 0)
+                {
+                    foreach (var player in playersInRow)
+                    {
+                        Console.Write(player.Position.Y == j ? $" {player.Name} |" : "   |");
+                    }
+                }
+                else
+                {
+                    // Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("   |");
+                    Console.ForegroundColor = ConsoleColor.White;
+                }
             }
             Console.WriteLine();
         }
