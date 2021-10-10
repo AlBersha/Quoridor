@@ -13,7 +13,7 @@ namespace QuoridorConsoleView
 
         public ConsoleOutput()
         {
-            playersPosition = new List<Point>{new Point(0, 4), new Point(8, 4)};
+            playersPosition = new List<Point>{new (0, 4), new (8, 4)};
         }
 
         public ConsoleOutput(int width, int height)
@@ -24,44 +24,33 @@ namespace QuoridorConsoleView
         
         public void PrintGameField()
         {
-            //get position of players
-            //??
-
-            var IsRowEmpty = true;
+            var playersInRow = new List<Point>();
             for (var i = 0; i < FieldHeight; i++)
             {
-                Console.WriteLine(" _______  ______  ______  ______  ______  ______  ______  ______  ______  ");
-                if (playersPosition.Any(point => i == point.X))
-                {
-                    IsRowEmpty = false;
-                }
-                
-                PrintRow(IsRowEmpty);
-                PrintRow(IsRowEmpty);
-
-                Console.WriteLine(" _______  ______  ______  ______  ______  ______  ______  ______  ______  ");
-                IsRowEmpty = true;
+                Console.WriteLine(" ———  ———  ———  ———  ———  ———  ———  ———  ——— ");
+                playersInRow.AddRange(playersPosition.Where(point => point.X == i));
+                PrintRow(playersInRow);
+                Console.WriteLine(" ———  ———  ———  ———  ———  ———  ———  ———  ——— ");
+                playersInRow.Clear();
             }
         }
 
-        private void PrintRow(bool IsRowEmpty)
+        private void PrintRow(List<Point> playersInRow)
         {
             var IsCellEmpty = true;
             for (var j = 0; j < FieldWidth; j++)
             {
-                    
-                foreach (var point in playersPosition.Where(point => !IsRowEmpty && j == point.Y))
+                if (playersInRow.Any(player => player.Y == j))
                 {
                     IsCellEmpty = false;
                 }
-
-                if (!IsCellEmpty && !IsRowEmpty)
+                if (playersInRow.Count != 0 && !IsCellEmpty)
                 {
-                    Console.Write("|------|");
+                    Console.Write("|***|");
                 }
                 else
                 {
-                    Console.Write("|\t|");
+                    Console.Write("|   |");
                 }
 
                 IsCellEmpty = true;
