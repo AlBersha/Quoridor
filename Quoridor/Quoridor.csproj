@@ -6,7 +6,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\QuoridorView\QuoridorView.csproj" />
+      <ProjectReference Include="..\Quoridor.View\Quoridor.View.csproj" />
     </ItemGroup>
 
 </Project>

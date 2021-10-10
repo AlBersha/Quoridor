@@ -1,5 +1,4 @@
-﻿using System;
-using QuoridorConsoleView;
+﻿using Quoridor.View;
 
 namespace Quoridor
 {
@@ -7,7 +6,8 @@ namespace Quoridor
     {
         static void Main(string[] args)
         {
-            
+            var output = new ConsoleView();
+            output.PrintGameField();
         }
     }
 }
