@@ -7,7 +7,7 @@ using Quoridor.View;
 
 namespace Quoridor
 {
-    class Program
+    static class Program
     {
         static void Main(string[] args)
         {
