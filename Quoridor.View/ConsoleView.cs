@@ -10,14 +10,14 @@ namespace Quoridor.View
     {
         private int FieldWidth { get; set; } = 9;
         private int FieldHeight { get; set; } = 9;
-        private List<Player> playersPosition { get; set; }
-        private List<(Vector2, Vector2)> walls { get; set; }
+        // private List<Player> playersPosition { get; set; }
+        // private List<(Vector2, Vector2)> walls { get; set; }
 
         public ConsoleView()
         { 
-            playersPosition = new List<Player> {new ("A", new Vector2(0, 4)), new ("B", new Vector2(8, 4))};
-            walls = new List<(Vector2, Vector2)> { (new Vector2(0, 0), new Vector2(0, 1)), (new Vector2(0, 2), new Vector2(0, 3)), 
-                                                    (new Vector2(0, 2), new Vector2(1, 2)), (new Vector2(2, 2), new Vector2(3, 2))};
+            // playersPosition = new List<Player> {new ("A", new Vector2(0, 4)), new ("B", new Vector2(8, 4))};
+            // walls = new List<(Vector2, Vector2)> { (new Vector2(0, 0), new Vector2(0, 1)), (new Vector2(0, 2), new Vector2(0, 3)), 
+            //                                         (new Vector2(0, 2), new Vector2(1, 2)), (new Vector2(2, 2), new Vector2(3, 2))};
         }
 
         public ConsoleView(int width, int height)
@@ -26,7 +26,7 @@ namespace Quoridor.View
             FieldHeight = height;
         }
 
-        public void PrintGameField()
+        public void PrintGameField(List<Player> playersPosition, List<(Vector2, Vector2)> walls)
         {
             var playersInRow = new List<Player>();
             var verticalWalls = new List<(Vector2, Vector2)>();
@@ -37,14 +37,14 @@ namespace Quoridor.View
                 playersInRow.AddRange(playersPosition.Where(point => point.Position.X == i));
                 verticalWalls.AddRange(walls.Where(wall => wall.Item1.X == i && wall.Item2.X == i));
                 PrintRow(playersInRow, verticalWalls); 
-                PrintGrooves(i);
+                PrintGrooves(i, walls);
                 
                 playersInRow.Clear();
                 verticalWalls.Clear();
             }
         }
 
-        private void PrintGrooves(int index)
+        private void PrintGrooves(int index, List<(Vector2, Vector2)> walls)
         {
             var horizontalWalls = new List<(Vector2, Vector2)>(); 
             for (var i = 0; i < FieldWidth; i++)
