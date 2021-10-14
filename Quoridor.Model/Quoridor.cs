@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Quoridor.Model
 {
-    class Quoridor
+    public class Quoridor
     {
         private readonly Player firstPlayer;
 
@@ -24,6 +24,18 @@ namespace Quoridor.Model
         {
             this.firstPlayer = firstPlayer;
             this.secondPlayer = secondPlayer;
+
+            SetFirstPlayerActive();
+        }
+
+        private void SetFirstPlayerActive()
+        {
+            CurrentPlayer = firstPlayer;
+        }
+
+        public void SwitchSides()
+        {
+            CurrentPlayer = CurrentPlayer == firstPlayer ? secondPlayer : firstPlayer;
         }
     }
 }
