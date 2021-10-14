@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Quoridor.Model
 {
-    class Wall
+    public class Wall
     {
 
     }

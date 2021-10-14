@@ -3,14 +3,33 @@ using System.Numerics;
 
 namespace Quoridor.Model
 {
-    class GameField
+    public class GameField
     {
         public GameField()
         {
-            
+            cells = new List<Cell>[fieldSize, fieldSize];
+            wallsList = new List<Wall>();
         }
 
-        private List<Vector2> cells;
+        public void RemovePassage(Cell from, Cell passage)
+        {
+            cells[from.X, from.Y].Remove(passage);
+        }
+
+        public bool AddWall(Wall wall)
+        {
+            if (wallsList.Contains(wall))
+                return false;
+            else
+                wallsList.Add(wall);
+
+
+
+            return true;
+        }
+
+        public const int fieldSize = 9;
+        private List<Cell>[,] cells;
         private List<Wall> wallsList;
     }
 }

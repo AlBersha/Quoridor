@@ -31,12 +31,5 @@ namespace Quoridor.Model.Tests
             game.SwitchSides();
             Assert.IsTrue(game.CurrentPlayer == playerB);
         }
-
-        [Test]
-        public void PlayerSidesSwitchedCorrectly()
-        {
-            game.SwitchSides();
-            Assert.IsTrue(game.CurrentPlayer == playerB);
-        }
     }
 }
