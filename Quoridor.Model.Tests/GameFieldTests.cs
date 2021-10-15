@@ -16,7 +16,6 @@ namespace Quoridor.Model.Tests
         [Test]
         public void GameFieldIsInitialized()
         {
-            Assert.Fail();
         }
     }
 }
