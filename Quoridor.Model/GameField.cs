@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Numerics;
 
 namespace Quoridor.Model
 {
@@ -8,7 +7,28 @@ namespace Quoridor.Model
         public GameField()
         {
             cells = new List<Cell>[fieldSize, fieldSize];
+
+            for (int columnIndex = 0; columnIndex < fieldSize; columnIndex++)
+            {
+                for (int rowIndex = 0; rowIndex < fieldSize; rowIndex++)
+                {
+                    cells[columnIndex, rowIndex] = GeneratePassages(new Cell(columnIndex, rowIndex));
+                }
+            }
+
             wallsList = new List<Wall>();
+        }
+
+        private List<Cell> GeneratePassages(Cell from)
+        {
+            List<Cell> result = new List<Cell>();
+
+            if (from.X > 0) result.Add(new Cell(from.X - 1, from.Y));
+            if (from.Y > 0) result.Add(new Cell(from.X, from.Y - 1));
+            if (from.X < fieldSize - 1) result.Add(new Cell(from.X + 1, from.Y));
+            if (from.Y < fieldSize - 1) result.Add(new Cell(from.X, from.Y + 1));
+
+            return result;
         }
 
         private void RemovePassage(Cell from, Cell passage)
@@ -35,6 +55,11 @@ namespace Quoridor.Model
             RemovePassages(wall);
 
             return true;
+        }
+
+        public List<Cell> GetPassages(Cell from)
+        {
+            return cells[from.X, from.Y];
         }
 
         public const int fieldSize = 9;
