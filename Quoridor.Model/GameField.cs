@@ -2,6 +2,7 @@
 
 namespace Quoridor.Model
 {
+    using Vector2Int = Cell;
     public class GameField
     {
         public GameField()
@@ -31,6 +32,67 @@ namespace Quoridor.Model
             return result;
         }
 
+        private bool WallExists(Cell from, Vector2Int direction)
+        {
+            Cell possibleWallCell = from + direction;
+
+            return cells[from.X, from.Y].Contains(possibleWallCell);
+        }
+
+        private bool IsWallBehindSecondPlayer(Cell secondPlayerPosition, Vector2Int direction)
+        {
+            return WallExists(secondPlayerPosition, direction);
+        }
+        
+        private List<Cell> GetPossibleDiagonalSpecialMoves(Cell secondPlayerPosition, Vector2Int direction)
+        {
+            List<Cell> result = new List<Cell>();
+
+            if (direction == Cell.UnaryDown || direction == Cell.UnaryUp)
+            {
+                if (!WallExists(secondPlayerPosition, direction + Cell.UnaryLeft)) result.Add(secondPlayerPosition + direction + Cell.UnaryLeft);
+                if (!WallExists(secondPlayerPosition, direction + Cell.UnaryRight)) result.Add(secondPlayerPosition + direction + Cell.UnaryRight);
+            }
+            else
+            {
+                if (!WallExists(secondPlayerPosition, direction + Cell.UnaryUp)) result.Add(secondPlayerPosition + direction + Cell.UnaryUp);
+                if (!WallExists(secondPlayerPosition, direction + Cell.UnaryDown)) result.Add(secondPlayerPosition + direction + Cell.UnaryDown);
+            }
+
+            return result;
+        }
+
+        private List<Cell> ReplaceOnPossibleSpecialMoves(List<Cell> availableMoves, Cell firstPlayerPosition, Cell secondPlayerPosition)
+        {
+            List<Cell> result = availableMoves;
+
+            bool isSpecialMovePossible = availableMoves.Contains(secondPlayerPosition);
+            if (isSpecialMovePossible)
+            {
+                Vector2Int direction = secondPlayerPosition - firstPlayerPosition;
+
+                if (IsWallBehindSecondPlayer(secondPlayerPosition, direction))
+                {
+                    result.AddRange(GetPossibleDiagonalSpecialMoves(secondPlayerPosition, direction));
+                }
+                else
+                {
+                    result.Remove(secondPlayerPosition);
+                    result.Add(secondPlayerPosition + direction);
+                }
+            }
+
+            return result;
+        }
+
+        public List<Cell> GeneratePossibleMoves(Cell firstPlayerPosition, Cell secondPlayerPosition)
+        {
+            List<Cell> result = cells[firstPlayerPosition.X, firstPlayerPosition.Y];
+            result = ReplaceOnPossibleSpecialMoves(result, firstPlayerPosition, secondPlayerPosition);
+
+            return result;
+        }
+
         private void RemovePassage(Cell from, Cell passage)
         {
             cells[from.X, from.Y].Remove(passage);
@@ -40,9 +102,9 @@ namespace Quoridor.Model
         {
             RemovePassage(wall.cells[0], wall.cells[1]);
             RemovePassage(wall.cells[1], wall.cells[0]);
-
-            RemovePassage(wall.cells[2], wall.cells[3]);
-            RemovePassage(wall.cells[3], wall.cells[2]);
+            
+            RemovePassage(wall.cells[0], wall.cells[1]);
+            RemovePassage(wall.cells[1], wall.cells[0]);
         }
 
         public bool AddWall(Wall wall)

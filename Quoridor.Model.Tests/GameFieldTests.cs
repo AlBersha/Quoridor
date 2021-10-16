@@ -64,5 +64,20 @@ namespace Quoridor.Model.Tests
             Assert.IsTrue(passages.Contains(new Cell(GameField.fieldSize - 1, GameField.fieldSize / 2 - 1)), "right case - bottom");
             Assert.IsTrue(passages.Contains(new Cell(GameField.fieldSize - 2, GameField.fieldSize / 2)), "right case - left");
         }
+
+        [Test]
+        public void GameFieldPossibleMovesAreGeneratedCorrectly()
+        {
+            gameField.AddWall(new Wall(
+                new Cell(1, 1),
+                new Cell(1, 2),
+                new Cell(2, 1),
+                new Cell(2, 2),
+                false
+                ));
+
+            var possibleMoves = gameField.GeneratePossibleMoves(new Cell(1, 2), new Cell(2, 2));
+            Assert.Fail();
+        }
     }
 }
