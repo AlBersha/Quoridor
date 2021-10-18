@@ -44,11 +44,6 @@ namespace Quoridor.Model
             return cell.X >= 0 && cell.X <= fieldSize - 1 &&
                 cell.Y >= 0 && cell.Y <= fieldSize - 1;
         }
-
-        private bool IsWallBehindSecondPlayer(Cell secondPlayerPosition, Vector2Int direction)
-        {
-            return WallExists(secondPlayerPosition, direction);
-        }
         
         private List<Cell> GetPossibleDiagonalSpecialMoves(Cell secondPlayerPosition, Vector2Int direction)
         {
@@ -80,16 +75,12 @@ namespace Quoridor.Model
             if (isSpecialMovePossible)
             {
                 result.Remove(secondPlayerPosition);
-                
                 Vector2Int direction = secondPlayerPosition - firstPlayerPosition;
-                if (IsWallBehindSecondPlayer(secondPlayerPosition, direction))
-                {
+                
+                if (WallExists(secondPlayerPosition, direction))
                     result.AddRange(GetPossibleDiagonalSpecialMoves(secondPlayerPosition, direction));
-                }
                 else
-                {
                     result.Add(secondPlayerPosition + direction);
-                }
             }
 
             return result;

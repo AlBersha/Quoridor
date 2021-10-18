@@ -9,6 +9,7 @@
         private GameField gameField;
 
         public Player CurrentPlayer { get; private set; }
+        public Player NextPlayer { get; private set; }
 
         public Player Winner { get; private set; }
 
@@ -25,11 +26,13 @@
         private void SetFirstPlayerActive()
         {
             CurrentPlayer = firstPlayer;
+            NextPlayer = secondPlayer;
         }
 
         public void SwitchSides()
         {
-            CurrentPlayer = CurrentPlayer == firstPlayer ? secondPlayer : firstPlayer;
+            CurrentPlayer = NextPlayer;
+            NextPlayer = NextPlayer == firstPlayer ? secondPlayer : firstPlayer;
         }
     }
 }
