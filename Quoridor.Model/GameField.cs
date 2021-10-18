@@ -36,7 +36,13 @@ namespace Quoridor.Model
         {
             Cell possibleWallCell = from + direction;
 
-            return cells[from.X, from.Y].Contains(possibleWallCell);
+            return !cells[from.X, from.Y].Contains(possibleWallCell);
+        }
+
+        private bool IsInFieldBorders(Cell cell)
+        {
+            return cell.X >= 0 && cell.X <= fieldSize - 1 &&
+                cell.Y >= 0 && cell.Y <= fieldSize - 1;
         }
 
         private bool IsWallBehindSecondPlayer(Cell secondPlayerPosition, Vector2Int direction)
@@ -50,13 +56,17 @@ namespace Quoridor.Model
 
             if (direction == Cell.UnaryDown || direction == Cell.UnaryUp)
             {
-                if (!WallExists(secondPlayerPosition, direction + Cell.UnaryLeft)) result.Add(secondPlayerPosition + direction + Cell.UnaryLeft);
-                if (!WallExists(secondPlayerPosition, direction + Cell.UnaryRight)) result.Add(secondPlayerPosition + direction + Cell.UnaryRight);
+                if (!WallExists(secondPlayerPosition + direction, Cell.UnaryLeft) && IsInFieldBorders(secondPlayerPosition + direction + Cell.UnaryLeft))
+                    result.Add(secondPlayerPosition + direction + Cell.UnaryLeft);
+                if (!WallExists(secondPlayerPosition + direction, Cell.UnaryRight) && IsInFieldBorders(secondPlayerPosition + direction + Cell.UnaryRight))
+                    result.Add(secondPlayerPosition + direction + Cell.UnaryRight);
             }
             else
             {
-                if (!WallExists(secondPlayerPosition, direction + Cell.UnaryUp)) result.Add(secondPlayerPosition + direction + Cell.UnaryUp);
-                if (!WallExists(secondPlayerPosition, direction + Cell.UnaryDown)) result.Add(secondPlayerPosition + direction + Cell.UnaryDown);
+                if (!WallExists(secondPlayerPosition + direction, Cell.UnaryUp) && IsInFieldBorders(secondPlayerPosition + direction + Cell.UnaryUp))
+                    result.Add(secondPlayerPosition + direction + Cell.UnaryUp);
+                if (!WallExists(secondPlayerPosition + direction, Cell.UnaryDown) && IsInFieldBorders(secondPlayerPosition + direction + Cell.UnaryDown))
+                    result.Add(secondPlayerPosition + direction + Cell.UnaryDown);
             }
 
             return result;
@@ -69,15 +79,15 @@ namespace Quoridor.Model
             bool isSpecialMovePossible = availableMoves.Contains(secondPlayerPosition);
             if (isSpecialMovePossible)
             {
+                result.Remove(secondPlayerPosition);
+                
                 Vector2Int direction = secondPlayerPosition - firstPlayerPosition;
-
                 if (IsWallBehindSecondPlayer(secondPlayerPosition, direction))
                 {
                     result.AddRange(GetPossibleDiagonalSpecialMoves(secondPlayerPosition, direction));
                 }
                 else
                 {
-                    result.Remove(secondPlayerPosition);
                     result.Add(secondPlayerPosition + direction);
                 }
             }
@@ -100,11 +110,12 @@ namespace Quoridor.Model
 
         private void RemovePassages(Wall wall)
         {
-            RemovePassage(wall.cells[0], wall.cells[1]);
-            RemovePassage(wall.cells[1], wall.cells[0]);
-            
-            RemovePassage(wall.cells[0], wall.cells[1]);
-            RemovePassage(wall.cells[1], wall.cells[0]);
+            var pairs = wall.GetPairs();
+            foreach (var pair in pairs)
+            {
+                RemovePassage(pair[0], pair[1]);
+                RemovePassage(pair[1], pair[0]);
+            }
         }
 
         public bool AddWall(Wall wall)
@@ -119,10 +130,7 @@ namespace Quoridor.Model
             return true;
         }
 
-        public List<Cell> GetPassages(Cell from)
-        {
-            return cells[from.X, from.Y];
-        }
+        public List<Cell> GetPassages(Cell from) => cells[from.X, from.Y];
 
         public const int fieldSize = 9;
         private List<Cell>[,] cells;

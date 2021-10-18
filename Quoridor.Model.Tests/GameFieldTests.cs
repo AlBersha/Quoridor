@@ -69,11 +69,19 @@ namespace Quoridor.Model.Tests
         public void GameFieldPossibleMovesAreGeneratedCorrectly()
         {
             gameField.AddWall(new Wall(
-                new Cell(1, 1),
-                new Cell(1, 2),
                 new Cell(2, 1),
+                new Cell(3, 2),
                 new Cell(2, 2),
+                new Cell(3, 1),
                 false
+                ));
+
+            gameField.AddWall(new Wall(
+                new Cell(3, 2),
+                new Cell(4, 3),
+                new Cell(3, 3),
+                new Cell(4, 2),
+                true
                 ));
 
             var possibleMoves = gameField.GeneratePossibleMoves(new Cell(1, 2), new Cell(2, 2));

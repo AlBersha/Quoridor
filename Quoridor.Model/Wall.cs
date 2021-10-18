@@ -18,6 +18,34 @@ namespace Quoridor.Model
             this.isVertical = isVertical;
         }
 
+        public List<List<Cell>> GetPairs()
+        {
+            if (!isVertical)
+                cells.Sort((Cell left, Cell right) => {
+                    int res = left.X.CompareTo(right.X);
+                    return res != 0 ? res : left.Y.CompareTo(right.Y);
+                });
+            else
+                cells.Sort((Cell left, Cell right) => {
+                    int res = left.Y.CompareTo(right.X);
+                    return res != 0 ? res : left.Y.CompareTo(right.Y);
+                });
+
+            return new List<List<Cell>>()
+            {
+                new List<Cell>()
+                {
+                    cells[0],
+                    cells[1]
+                },
+                new List<Cell>()
+                {
+                    cells[2],
+                    cells[3]
+                },
+            };
+        }
+
         public Cells cells { get; }
         public bool isVertical { get; }
     }
