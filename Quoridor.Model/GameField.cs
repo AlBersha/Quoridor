@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Quoridor.Model
 {
@@ -128,15 +129,15 @@ namespace Quoridor.Model
             RemovePassages(wall);
             
             bool firstNearWallExists, secondNearWallExists, intersectingWallExists;
-            firstNearWallExists = wallsList.Contains(wall + (wall.isVertical ? Vector2Int.UnaryUp : Vector2Int.UnaryLeft));
-            secondNearWallExists = wallsList.Contains(wall + (wall.isVertical ? Vector2Int.UnaryDown : Vector2Int.UnaryRight));
-            intersectingWallExists = wallsList.Contains(wall.Reverse());
+            firstNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryUp : Vector2Int.UnaryLeft)));
+            secondNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryDown : Vector2Int.UnaryRight)));
+            intersectingWallExists = wallsList.Any(wallElement => wallElement == wall.Reverse());
 
-            if (wallsList.Contains(wall)   // the wall does not already exists
-                || !firstNearWallExists    // no wall overlaps the new one
-                || !secondNearWallExists   // ~
-                || !intersectingWallExists // ~
-                || !WinningWaysExist(firstPlayerPosition, secondPlayerPosition, target)) // the wall does not block anyone
+            if (wallsList.Contains(wall)   // the wall already exists
+                || firstNearWallExists    // a wall overlaps the new one
+                || secondNearWallExists   // ~
+                || intersectingWallExists // ~
+                || !WinningWaysExist(firstPlayerPosition, secondPlayerPosition, target)) // the wall blocks someone
             {
                 AddPassages(wall);
                 return false;

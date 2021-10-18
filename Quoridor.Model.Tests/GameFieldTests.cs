@@ -121,5 +121,101 @@ namespace Quoridor.Model.Tests
                 ), firstPlayerPosition, secondPlayerPosition, targetPosition);
             Assert.IsFalse(secondWallPlaced);
         }
+
+        [Test]
+        public void AddingCrossOverlappingWallsIsNotPossible()
+        {
+            var firstPlayerPosition = new Cell(1, 2);
+            var secondPlayerPosition = new Cell(2, 2);
+            var targetPosition = new Cell(8, 8);
+
+            var firstWallPlaced = gameField.AddWall(new Wall(
+                new Cell(7, 6),
+                new Cell(7, 7),
+                new Cell(8, 6),
+                new Cell(8, 7),
+                false
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsTrue(firstWallPlaced);
+
+            var secondWallPlaced = gameField.AddWall(new Wall(
+                new Cell(7, 6),
+                new Cell(7, 7),
+                new Cell(8, 6),
+                new Cell(8, 7),
+                true
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsFalse(secondWallPlaced);
+        }
+
+        [Test]
+        public void AddingSlightlyOverlappingWallsIsNotPossible_Vertically()
+        {
+            var firstPlayerPosition = new Cell(1, 2);
+            var secondPlayerPosition = new Cell(2, 2);
+            var targetPosition = new Cell(8, 8);
+
+            var firstWallPlaced = gameField.AddWall(new Wall(
+                new Cell(7, 5),
+                new Cell(7, 6),
+                new Cell(8, 5),
+                new Cell(8, 6),
+                true
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsTrue(firstWallPlaced);
+
+            var secondWallPlaced = gameField.AddWall(new Wall(
+                new Cell(7, 6),
+                new Cell(7, 7),
+                new Cell(8, 6),
+                new Cell(8, 7),
+                true
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsFalse(secondWallPlaced);
+
+            var thirdWallPlaced = gameField.AddWall(new Wall(
+                new Cell(7, 4),
+                new Cell(7, 5),
+                new Cell(8, 4),
+                new Cell(8, 5),
+                true
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsFalse(thirdWallPlaced);
+        }
+
+        [Test]
+        public void AddingSlightlyOverlappingWallsIsNotPossible_Horizontally()
+        {
+            var firstPlayerPosition = new Cell(1, 2);
+            var secondPlayerPosition = new Cell(2, 2);
+            var targetPosition = new Cell(8, 8);
+
+            var firstWallPlaced = gameField.AddWall(new Wall(
+                new Cell(6, 6),
+                new Cell(6, 7),
+                new Cell(7, 6),
+                new Cell(7, 7),
+                false
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsTrue(firstWallPlaced);
+
+            var secondWallPlaced = gameField.AddWall(new Wall(
+                new Cell(5, 6),
+                new Cell(5, 7),
+                new Cell(6, 6),
+                new Cell(6, 7),
+                false
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsFalse(secondWallPlaced);
+
+            var thirdWallPlaced = gameField.AddWall(new Wall(
+                new Cell(7, 6),
+                new Cell(7, 7),
+                new Cell(8, 6),
+                new Cell(8, 7),
+                false
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsFalse(thirdWallPlaced);
+        }
     }
 }

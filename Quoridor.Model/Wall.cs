@@ -1,4 +1,6 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
+using System;
 
 namespace Quoridor.Model
 {
@@ -48,15 +50,42 @@ namespace Quoridor.Model
 
         public Wall Reverse()
         {
-            return new Wall(this.cells[0], this.cells[1], this.cells[2], this.cells[3], !this.isVertical);
+            return new Wall(cells[0], cells[1], cells[2], cells[3], !isVertical);
+        }
+
+        public static bool operator ==(Wall l, Wall r)
+        {
+            var cellsL = l.cells;
+            cellsL.Sort((Cell left, Cell right) => {
+                int res = left.X.CompareTo(right.X);
+                return res != 0 ? res : left.Y.CompareTo(right.Y);
+            });
+
+            var cellsR = r.cells;
+            cellsR.Sort((Cell left, Cell right) => {
+                int res = left.X.CompareTo(right.X);
+                return res != 0 ? res : left.Y.CompareTo(right.Y);
+            });
+            
+            return Enumerable.SequenceEqual(cellsL, cellsR) && l.isVertical == r.isVertical;
+        }
+
+        public static bool operator !=(Wall l, Wall r)
+        {
+            return !(l == r);
         }
 
         public static Wall operator +(Wall wall, Cell cell)
         {
-            return new Wall(wall.cells[0] + cell, wall.cells[1] + cell, wall.cells[2] + cell, wall.cells[3] + cell, wall.isVertical);
+            var newWall = new Wall(wall.cells[0] + cell, wall.cells[1] + cell, wall.cells[2] + cell, wall.cells[3] + cell, wall.isVertical);
+            foreach (var c in newWall.cells)
+                if (c.X < 0 || c.X > GameField.fieldSize || c.Y < 0 || c.Y > GameField.fieldSize)
+                    return wall;
+            
+            return newWall;
         }
 
         public Cells cells { get; }
-        public bool isVertical { get; }
+        public bool isVertical { get; private set; }
     }
 }
