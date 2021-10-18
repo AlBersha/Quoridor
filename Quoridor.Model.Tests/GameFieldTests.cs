@@ -68,13 +68,17 @@ namespace Quoridor.Model.Tests
         [Test]
         public void GameFieldPossibleMovesAreGeneratedCorrectly()
         {
+            var firstPlayerPosition = new Cell(1, 2);
+            var secondPlayerPosition = new Cell(2, 2);
+            var targetPosition = new Cell(8, 8);
+
             gameField.AddWall(new Wall(
                 new Cell(2, 1),
                 new Cell(3, 2),
                 new Cell(2, 2),
                 new Cell(3, 1),
                 false
-                ));
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
 
             gameField.AddWall(new Wall(
                 new Cell(3, 2),
@@ -82,9 +86,9 @@ namespace Quoridor.Model.Tests
                 new Cell(3, 3),
                 new Cell(4, 2),
                 true
-                ));
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
 
-            var possibleMoves = gameField.GeneratePossibleMoves(new Cell(1, 2), new Cell(2, 2));
+            var possibleMoves = gameField.GeneratePossibleMoves(firstPlayerPosition, secondPlayerPosition);
             Assert.Fail();
         }
     }

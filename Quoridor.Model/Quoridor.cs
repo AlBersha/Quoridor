@@ -5,6 +5,8 @@
         private readonly Player firstPlayer;
 
         private readonly Player secondPlayer;
+        
+        private readonly Cell target;
 
         private GameField gameField;
 
@@ -15,10 +17,11 @@
 
         public bool IsEnded { get; private set; }
 
-        public Quoridor(Player firstPlayer, Player secondPlayer)
+        public Quoridor(Player firstPlayer, Player secondPlayer, Cell target)
         {
             this.firstPlayer = firstPlayer;
             this.secondPlayer = secondPlayer;
+            this.target = target;
 
             SetFirstPlayerActive();
         }

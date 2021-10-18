@@ -44,7 +44,7 @@ namespace Quoridor.Model
             return cell.X >= 0 && cell.X <= fieldSize - 1 &&
                 cell.Y >= 0 && cell.Y <= fieldSize - 1;
         }
-        
+
         private List<Cell> GetPossibleDiagonalSpecialMoves(Cell secondPlayerPosition, Vector2Int direction)
         {
             List<Cell> result = new List<Cell>();
@@ -76,7 +76,7 @@ namespace Quoridor.Model
             {
                 result.Remove(secondPlayerPosition);
                 Vector2Int direction = secondPlayerPosition - firstPlayerPosition;
-                
+
                 if (WallExists(secondPlayerPosition, direction))
                     result.AddRange(GetPossibleDiagonalSpecialMoves(secondPlayerPosition, direction));
                 else
@@ -109,9 +109,10 @@ namespace Quoridor.Model
             }
         }
 
-        public bool AddWall(Wall wall)
+        public bool AddWall(Wall wall, Cell firstPlayerPosition, Cell secondPlayerPosition, Cell target)
         {
-            if (wallsList.Contains(wall))
+            bool waysFound = WinningWaysExist(firstPlayerPosition, secondPlayerPosition, target);
+            if (wallsList.Contains(wall) || !waysFound)
                 return false;
             else
                 wallsList.Add(wall);
@@ -119,6 +120,28 @@ namespace Quoridor.Model
             RemovePassages(wall);
 
             return true;
+        }
+
+        private bool WayExists(Cell from, Cell to, List<Cell> visitedCells)
+        {
+            foreach (var cell in cells[from.X, from.Y])
+            {
+                if (!visitedCells.Contains(cell))
+                {
+                    if (cell == to) return true;
+                    else
+                    {
+                        visitedCells.Add(cell);
+                        if (WayExists(cell, to, visitedCells)) return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        private bool WinningWaysExist(Cell firstPlayerPosition, Cell secondPlayerPosition, Cell target)
+        {
+            return WayExists(firstPlayerPosition, target, new List<Cell>() { firstPlayerPosition }) && WayExists(secondPlayerPosition, target, new List<Cell>() { secondPlayerPosition });
         }
 
         public List<Cell> GetPassages(Cell from) => cells[from.X, from.Y];
