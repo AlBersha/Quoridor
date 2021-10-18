@@ -46,6 +46,16 @@ namespace Quoridor.Model
             };
         }
 
+        public Wall Reverse()
+        {
+            return new Wall(this.cells[0], this.cells[1], this.cells[2], this.cells[3], !this.isVertical);
+        }
+
+        public static Wall operator +(Wall wall, Cell cell)
+        {
+            return new Wall(wall.cells[0] + cell, wall.cells[1] + cell, wall.cells[2] + cell, wall.cells[3] + cell, wall.isVertical);
+        }
+
         public Cells cells { get; }
         public bool isVertical { get; }
     }

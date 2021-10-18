@@ -126,9 +126,17 @@ namespace Quoridor.Model
         public bool AddWall(Wall wall, Cell firstPlayerPosition, Cell secondPlayerPosition, Cell target)
         {
             RemovePassages(wall);
+            
+            bool firstNearWallExists, secondNearWallExists, intersectingWallExists;
+            firstNearWallExists = wallsList.Contains(wall + (wall.isVertical ? Vector2Int.UnaryUp : Vector2Int.UnaryLeft));
+            secondNearWallExists = wallsList.Contains(wall + (wall.isVertical ? Vector2Int.UnaryDown : Vector2Int.UnaryRight));
+            intersectingWallExists = wallsList.Contains(wall.Reverse());
 
-            bool waysFound = WinningWaysExist(firstPlayerPosition, secondPlayerPosition, target);
-            if (wallsList.Contains(wall) || !waysFound)
+            if (wallsList.Contains(wall)   // the wall does not already exists
+                || !firstNearWallExists    // no wall overlaps the new one
+                || !secondNearWallExists   // ~
+                || !intersectingWallExists // ~
+                || !WinningWaysExist(firstPlayerPosition, secondPlayerPosition, target)) // the wall does not block anyone
             {
                 AddPassages(wall);
                 return false;
