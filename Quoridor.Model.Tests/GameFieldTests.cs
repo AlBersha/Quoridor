@@ -1,5 +1,6 @@
 ﻿using NUnit.Framework;
 using Quoridor.Model;
+using System.Collections.Generic;
 
 namespace Quoridor.Model.Tests
 {
@@ -73,23 +74,52 @@ namespace Quoridor.Model.Tests
             var targetPosition = new Cell(8, 8);
 
             gameField.AddWall(new Wall(
-                new Cell(2, 1),
-                new Cell(3, 2),
+                new Cell(1, 1),
                 new Cell(2, 2),
-                new Cell(3, 1),
+                new Cell(1, 2),
+                new Cell(2, 1),
                 false
                 ), firstPlayerPosition, secondPlayerPosition, targetPosition);
 
             gameField.AddWall(new Wall(
-                new Cell(3, 2),
-                new Cell(4, 3),
+                new Cell(2, 2),
                 new Cell(3, 3),
-                new Cell(4, 2),
+                new Cell(2, 3),
+                new Cell(3, 2),
                 true
                 ), firstPlayerPosition, secondPlayerPosition, targetPosition);
 
-            var possibleMoves = gameField.GeneratePossibleMoves(firstPlayerPosition, secondPlayerPosition);
-            Assert.Fail();
+            List<Cell> possibleMoves = gameField.GeneratePossibleMoves(firstPlayerPosition, secondPlayerPosition);
+            Assert.IsTrue(possibleMoves.Count == 3);
+            Assert.IsTrue(possibleMoves.Contains(new Cell(0, 2)));
+            Assert.IsTrue(possibleMoves.Contains(new Cell(1, 3)));
+            Assert.IsTrue(possibleMoves.Contains(new Cell(2, 3)));
+        }
+
+        [Test]
+        public void AddingBlockingWallsIsNotPossible()
+        {
+            var firstPlayerPosition = new Cell(1, 2);
+            var secondPlayerPosition = new Cell(2, 2);
+            var targetPosition = new Cell(8, 8);
+
+            var firstWallPlaced = gameField.AddWall(new Wall(
+                new Cell(7, 6),
+                new Cell(7, 7),
+                new Cell(8, 6),
+                new Cell(8, 7),
+                false
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsTrue(firstWallPlaced);
+
+            var secondWallPlaced = gameField.AddWall(new Wall(
+                new Cell(6, 7),
+                new Cell(6, 8),
+                new Cell(7, 7),
+                new Cell(7, 8),
+                true
+                ), firstPlayerPosition, secondPlayerPosition, targetPosition);
+            Assert.IsFalse(secondWallPlaced);
         }
     }
 }

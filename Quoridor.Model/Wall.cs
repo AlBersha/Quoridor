@@ -27,8 +27,8 @@ namespace Quoridor.Model
                 });
             else
                 cells.Sort((Cell left, Cell right) => {
-                    int res = left.Y.CompareTo(right.X);
-                    return res != 0 ? res : left.Y.CompareTo(right.Y);
+                    int res = left.Y.CompareTo(right.Y);
+                    return res != 0 ? res : left.X.CompareTo(right.X);
                 });
 
             return new List<List<Cell>>()
