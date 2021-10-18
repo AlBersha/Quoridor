@@ -1,4 +1,6 @@
-﻿namespace Quoridor.Model
+﻿using System.Collections.Generic;
+
+namespace Quoridor.Model
 {
     public class Quoridor
     {
@@ -36,6 +38,31 @@
         {
             CurrentPlayer = NextPlayer;
             NextPlayer = NextPlayer == firstPlayer ? secondPlayer : firstPlayer;
+        }
+
+        public List<Cell> GetPlayerMoves()
+        {
+            return gameField.GeneratePossibleMoves(CurrentPlayer.Position, NextPlayer.Position);
+        }
+
+        public bool MovePlayer(Cell to)
+        {
+            if (GetPlayerMoves().Contains(to))
+            {
+                CurrentPlayer.Position = to;
+                return true;
+            }
+            return false;
+        }
+
+        public bool TryAddingWall(Wall wall)
+        {
+            return gameField.AddWall(wall, CurrentPlayer.Position, NextPlayer.Position, target);
+        }
+
+        public bool IsVictoryAchieved()
+        {
+            return CurrentPlayer.Position == target;
         }
     }
 }
