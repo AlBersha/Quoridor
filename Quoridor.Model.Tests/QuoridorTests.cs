@@ -14,8 +14,8 @@ namespace Quoridor.Model.Tests
         [SetUp]
         public void Setup()
         {
-            playerA = new Player("A", System.Numerics.Vector2.One);
-            playerB = new Player("B", System.Numerics.Vector2.Zero);
+            playerA = new Player("A", new Cell(1,1));
+            playerB = new Player("B", new Cell(0, 0));
             target = new Cell(8, 8);
 
             game = new Quoridor(playerA, playerB, target);
