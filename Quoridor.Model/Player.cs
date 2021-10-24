@@ -4,10 +4,10 @@ namespace Quoridor.Model
 {
     public class Player
     {
-        public string Name { get; set; }
-        public Vector2 Position { get; set; }
+        public string Name { get; private set; }
+        public Cell Position { get; set; }
 
-        public Player(string name, Vector2 position)
+        public Player(string name, Cell position)
         {
             Name = name;
             Position = position;
