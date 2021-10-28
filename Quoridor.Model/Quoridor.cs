@@ -8,7 +8,7 @@ namespace Quoridor.Model
 
         private readonly Player secondPlayer;
         
-        private readonly Cell target;
+        private readonly Dictionary<Player, List<Cell>> targets;
 
         private GameField gameField;
 
@@ -19,13 +19,20 @@ namespace Quoridor.Model
 
         public bool IsEnded { get; private set; }
 
-        public Quoridor(Player firstPlayer, Player secondPlayer, Cell target)
+        public Quoridor(Player firstPlayer, Player secondPlayer, Dictionary<Player, List<Cell>> targets)
         {
             this.firstPlayer = firstPlayer;
             this.secondPlayer = secondPlayer;
-            this.target = target;
-
+            this.targets = targets;
+        
             SetFirstPlayerActive();
+            gameField = new GameField();
+        }
+        
+        public void StartGame()
+        {         
+            SetFirstPlayerActive();
+            gameField = new GameField();
         }
 
         private void SetFirstPlayerActive()
@@ -42,7 +49,7 @@ namespace Quoridor.Model
 
         public List<Cell> GetPlayerMoves()
         {
-            return gameField.GeneratePossibleMoves(CurrentPlayer.Position, NextPlayer.Position);
+            return gameField.GeneratePossibleMoves(CurrentPlayer, NextPlayer);
         }
 
         public bool MovePlayer(Cell to)
@@ -57,12 +64,13 @@ namespace Quoridor.Model
 
         public bool TryAddingWall(Wall wall)
         {
-            return gameField.AddWall(wall, CurrentPlayer.Position, NextPlayer.Position, target);
+            return gameField.AddWall(wall, CurrentPlayer, NextPlayer, targets);
         }
 
         public bool IsVictoryAchieved()
         {
-            return CurrentPlayer.Position == target;
+            return targets[CurrentPlayer]
+                .Exists(cell => cell.X == CurrentPlayer.Position.X && cell.Y == CurrentPlayer.Position.Y);
         }
     }
 }

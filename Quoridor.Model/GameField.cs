@@ -67,29 +67,29 @@ namespace Quoridor.Model
             return result;
         }
 
-        private List<Cell> ReplaceOnPossibleSpecialMoves(List<Cell> availableMoves, Cell firstPlayerPosition, Cell secondPlayerPosition)
+        private List<Cell> ReplaceOnPossibleSpecialMoves(List<Cell> availableMoves, Player firstPlayer, Player secondPlayer)
         {
             List<Cell> result = availableMoves;
 
-            bool isSpecialMovePossible = availableMoves.Contains(secondPlayerPosition);
+            bool isSpecialMovePossible = availableMoves.Contains(secondPlayer.Position);
             if (isSpecialMovePossible)
             {
-                result.Remove(secondPlayerPosition);
-                Vector2Int direction = secondPlayerPosition - firstPlayerPosition;
+                result.Remove(secondPlayer.Position);
+                Vector2Int direction = secondPlayer.Position - firstPlayer.Position;
 
-                if (WallExists(secondPlayerPosition, direction))
-                    result.AddRange(GetPossibleDiagonalSpecialMoves(secondPlayerPosition, direction));
+                if (WallExists(secondPlayer.Position, direction))
+                    result.AddRange(GetPossibleDiagonalSpecialMoves(secondPlayer.Position, direction));
                 else
-                    result.Add(secondPlayerPosition + direction);
+                    result.Add(secondPlayer.Position + direction);
             }
 
             return result;
         }
 
-        public List<Cell> GeneratePossibleMoves(Cell firstPlayerPosition, Cell secondPlayerPosition)
+        public List<Cell> GeneratePossibleMoves(Player firstPlayer, Player secondPlayer)
         {
-            List<Cell> result = cells[firstPlayerPosition.X, firstPlayerPosition.Y];
-            result = ReplaceOnPossibleSpecialMoves(result, firstPlayerPosition, secondPlayerPosition);
+            List<Cell> result = cells[firstPlayer.Position.X, firstPlayer.Position.Y];
+            result = ReplaceOnPossibleSpecialMoves(result, firstPlayer, secondPlayer);
 
             return result;
         }
@@ -124,7 +124,7 @@ namespace Quoridor.Model
             }
         }
 
-        public bool AddWall(Wall wall, Cell firstPlayerPosition, Cell secondPlayerPosition, Cell target)
+        public bool AddWall(Wall wall, Player firstPlayer, Player secondPlayer, Dictionary<Player, List<Cell>> targets)
         {
             RemovePassages(wall);
             
@@ -137,41 +137,38 @@ namespace Quoridor.Model
                 || firstNearWallExists    // a wall overlaps the new one
                 || secondNearWallExists   // ~
                 || intersectingWallExists // ~
-                || !WinningWaysExist(firstPlayerPosition, secondPlayerPosition, target)) // the wall blocks someone
+                || !WinningWaysExist(firstPlayer, secondPlayer, targets)) // the wall blocks someone
             {
                 AddPassages(wall);
                 return false;
             }
-            else
-                wallsList.Add(wall);
+
+            wallsList.Add(wall);
 
             return true;
         }
 
-        private bool WayExists(Cell from, Cell to, ref List<Cell> visitedCells)
+        private bool WayExists(Cell from, List<Cell> to, ref List<Cell> visitedCells)
         {
             foreach (var cell in cells[from.X, from.Y])
             {
                 if (!visitedCells.Contains(cell))
                 {
-                    if (cell == to) return true;
-                    else
-                    {
-                        visitedCells.Add(cell);
-                        if (WayExists(cell, to, ref visitedCells)) return true;
-                    }
+                    if (to.Contains(cell)) return true;
+                    visitedCells.Add(cell);
+                    if (WayExists(cell, to, ref visitedCells)) return true;
                 }
             }
             return false;
         }
 
-        private bool WinningWaysExist(Cell firstPlayerPosition, Cell secondPlayerPosition, Cell target)
+        private bool WinningWaysExist(Player firstPlayer, Player secondPlayer, Dictionary<Player, List<Cell>> targets)
         {
-            var visitedCells = new List<Cell>() { firstPlayerPosition };
-            bool firstPlayerWayExists = WayExists(firstPlayerPosition, target, ref visitedCells);
+            var visitedCells = new List<Cell>() { firstPlayer.Position };
+            bool firstPlayerWayExists = WayExists(firstPlayer.Position, targets[firstPlayer], ref visitedCells);
 
-            visitedCells = new List<Cell>() { secondPlayerPosition };
-            bool secondPlayerWayExists = WayExists(secondPlayerPosition, target, ref visitedCells);
+            visitedCells = new List<Cell>() { secondPlayer.Position };
+            bool secondPlayerWayExists = WayExists(secondPlayer.Position, targets[firstPlayer], ref visitedCells);
 
             return firstPlayerWayExists && secondPlayerWayExists;
         }
