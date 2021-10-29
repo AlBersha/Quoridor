@@ -44,20 +44,18 @@ namespace Quoridor.Model
 
         public override bool TryAddingWall(Wall wall)
         {
-            var result = base.TryAddingWall(wall);
-            if (result)
+            if (base.TryAddingWall(wall))
             {
                 FieldUpdated?.Invoke(new List<Player>{CurrentPlayer, NextPlayer}, gameField.Walls);
                 if (Winner is not null)
                 {
                     PlayerWon?.Invoke(Winner);
                 }
+                return true;
             }
-            else
-            {
-                WrongActivity?.Invoke(CurrentPlayer);
-            }
-            return result;
+
+            WrongActivity?.Invoke(CurrentPlayer);
+            return false;
         }
         
     }

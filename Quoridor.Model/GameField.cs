@@ -142,7 +142,6 @@ namespace Quoridor.Model
             }
 
             wallsList.Add(wall);
-
             return true;
         }
 

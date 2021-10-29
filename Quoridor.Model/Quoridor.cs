@@ -24,9 +24,6 @@ namespace Quoridor.Model
             this.firstPlayer = firstPlayer;
             this.secondPlayer = secondPlayer;
             this.targets = targets;
-            
-            // SetFirstPlayerActive();
-            // gameField = new GameField();
         }
         
         public virtual void StartGame()
@@ -81,7 +78,10 @@ namespace Quoridor.Model
 
         public virtual bool TryAddingWall(Wall wall)
         {
-            return gameField.AddWall(wall, CurrentPlayer, NextPlayer, targets);
+            if (!gameField.AddWall(wall, CurrentPlayer, NextPlayer, targets)) return false;
+            SwitchSides();
+            return true;
+
         }
 
         private bool IsVictoryAchieved()
