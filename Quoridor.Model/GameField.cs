@@ -125,6 +125,8 @@ namespace Quoridor.Model
 
         public bool AddWall(Wall wall, Player firstPlayer, Player secondPlayer, Dictionary<string, List<Cell>> targets)
         {
+            if (!CheckWallConsistency(wall)) return false;
+            
             RemovePassages(wall);
 
             var firstNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryUp : Vector2Int.UnaryLeft)));
@@ -143,6 +145,11 @@ namespace Quoridor.Model
 
             wallsList.Add(wall);
             return true;
+        }
+
+        private bool CheckWallConsistency(Wall wall)
+        {
+            return !(from cell in wall.cells let t = wall.cells.Where(c => Math.Abs(cell.X - c.X) == 1).ToList() let m = wall.cells.Where(c => Math.Abs(cell.Y - c.Y) == 1).ToList() let q = wall.cells.Exists(c => Math.Abs(cell.X - c.X) == 1 && Math.Abs(cell.Y - c.Y) == 1) where t.Count != 2 || m.Count != 2 && !q select t).Any();
         }
 
         private bool WayExists(Cell from, List<Cell> to, ref List<Cell> visitedCells)
