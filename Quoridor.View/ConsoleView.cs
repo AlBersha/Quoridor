@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using Quoridor.Model;
 
 namespace Quoridor.View
@@ -10,87 +9,108 @@ namespace Quoridor.View
     {
         private int FieldWidth { get; set; }
         private int FieldHeight { get; set; }
-
-        public ConsoleView()
+        
+        public void SetUpGame(QuoridorEvents game, int fieldWidth, int fieldHeight)
         {
-            FieldWidth = 9;
-            FieldHeight = 9;
+            FieldWidth = fieldWidth;
+            FieldHeight = fieldHeight;
+            
+            game.FieldUpdated += PrintGameField;
+            game.GameStarted += GameStarted;
+            game.PlayerWon += PlayerWon;
+            game.WrongActivity += OnWrongActivity;
+            game.HelpRequest += OnHelpRequest;
+            game.CurrentPlayerRequest += OnCurrentPlayerRequest;
         }
-        public ConsoleView(int width, int height)
-        {
-            FieldWidth = width;
-            FieldHeight = height;
-        }
 
-        public void PrintGameField(List<Player> playersPosition, List<(Vector2, Vector2)> walls)
+        private void PrintGameField(List<Player> playersPosition, List<Wall> walls)
         {
-            var playersInRow = new List<Player>();
-            var verticalWalls = new List<(Vector2, Vector2)>();
-
             for (var i = 0; i < FieldWidth; i++)
             {
                 Console.Write(" ———");
             }
             Console.WriteLine();
             for (var i = 0; i < FieldHeight; i++) 
-            { 
-                playersInRow.AddRange(playersPosition.Where(point => point.Position.X == i));
-                verticalWalls.AddRange(walls.Where(wall => wall.Item1.X == i && wall.Item2.X == i));
-                PrintRow(playersInRow, verticalWalls); 
-                PrintGrooves(i, walls);
-                
-                playersInRow.Clear();
-                verticalWalls.Clear();
-            }
-        }
-
-        private void PrintGrooves(int index, List<(Vector2, Vector2)> walls)
-        {
-            var horizontalWalls = new List<(Vector2, Vector2)>(); 
-            for (var i = 0; i < FieldWidth; i++)
             {
-                if (walls.Count != 0 && walls.Exists(wall => wall.Item1.X == index))
+                Console.Write("|");
+                for (var j = 0; j < FieldWidth; j++)
                 {
-                    horizontalWalls.AddRange(walls.Where(wall => wall.Item1.X == index));
-                }
+                    var player = playersPosition.Find(player => player.Position.X == i && player.Position.Y == j);
+                    if (player != null)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.Out.Write($" {player.Name} ");
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
+                    else
+                    {
+                        Console.Out.Write($"{i},{j}");
+                    }
 
-                if (horizontalWalls.Count != 0 && horizontalWalls.Exists(wall => wall.Item1.Y == i && wall.Item2.Y == i))
-                {
-                    Console.ForegroundColor = ConsoleColor.Green; 
-                    Console.Write(" ═══"); 
-                    Console.ForegroundColor = ConsoleColor.White;
+                    var wallExists = walls.Any(wall => wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i && cell.Y == j + 1));
+                    if (wallExists)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green; 
+                        Console.Write("║"); 
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
+                    else
+                    {
+                        Console.Write("|");
+                    }
                 }
-                else
+                Console.Out.WriteLine();
+
+                for (var j = 0; j < FieldWidth; j++)
                 {
-                    Console.Write(" ———");
+                    var wallExists = walls.Any(wall => !wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i+1 && cell.Y == j));
+                    if (wallExists)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Green; 
+                        Console.Write(" ═══"); 
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
+                    else
+                    {
+                        Console.Out.Write(" ———");
+                    }
                 }
+                Console.Out.WriteLine();
             }
-            Console.WriteLine();
         }
         
-        private void PrintRow(List<Player> playersInRow, List<(Vector2, Vector2)> wallsInRow)
+        private void PlayerWon(Player player)
         {
-            Console.Write("|");
-            for (var j = 0; j < FieldWidth; j++)
-            {
-                Console.Write(playersInRow.Count != 0 && playersInRow.Exists(player => player.Position.Y == j)
-                    ? $" {playersInRow.Find(player => player.Position.Y == j).Name} "
-                    : "   ");
-                
-                if (wallsInRow.Count != 0 && wallsInRow.Exists(wall => wall.Item1.Y == j))
-                {
-                    Console.ForegroundColor = ConsoleColor.Green; 
-                    Console.Write("║"); 
-                    Console.ForegroundColor = ConsoleColor.White;
-                 
-                }
-                else
-                {
-                    Console.Write("|");
-                }
-            }
-            Console.WriteLine();
+            Console.Out.WriteLine($"Game is over! Player {player.Name} won!\n\nType EXIT to end game, type START to continue playing");
         }
-         
+        
+        private void GameStarted(List<Player> playersPosition, List<Wall> walls)
+        {
+            Console.Out.WriteLine("The game has begun. Build a wall or make a move");
+            PrintGameField(playersPosition, walls);
+        }
+
+        private void OnWrongActivity(bool isMove, Player player)
+        {
+            Console.Out.Write($"Wrong activity for player {player.Name}.");
+            Console.Out.Write(
+                isMove ? " The cell is either busy or unreachable.\n" : " The position of wall is either unacceptable or incorrect.\n");
+        }
+
+        private void OnHelpRequest()
+        {
+            Console.Out.WriteLine("To build the wall print \"WALL x1 y1 x2 y2 x3 y3 x4 y4 TRUE (if your wall is vertical) / FALSE (if a wall is horizontal)\nwhere x, y - cell coordinates" +
+                                  "\nTo make a move print MOVE x y" +
+                                  "\nTo suggest or comment write to @Necessity or @vermi4elli\n");
+        }
+
+        private void OnCurrentPlayerRequest(Player player)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Out.WriteLine(player is null ? "Start game first": $"{player.Name}");
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+        
+        
     }
 }

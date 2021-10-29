@@ -24,7 +24,7 @@ namespace Quoridor.Model
 
         private List<Cell> GeneratePassages(Cell from)
         {
-            List<Cell> result = new List<Cell>();
+            var result = new List<Cell>();
 
             if (from.X > 0) result.Add(new Cell(from.X - 1, from.Y));
             if (from.Y > 0) result.Add(new Cell(from.X, from.Y - 1));
@@ -36,22 +36,21 @@ namespace Quoridor.Model
 
         private bool WallExists(Cell from, Vector2Int direction)
         {
-            Cell possibleWallCell = from + direction;
+            var possibleWallCell = from + direction;
 
             return !cells[from.X, from.Y].Contains(possibleWallCell);
         }
 
         private bool IsInFieldBorders(Cell cell)
         {
-            return cell.X >= 0 && cell.X <= fieldSize - 1 &&
-                cell.Y >= 0 && cell.Y <= fieldSize - 1;
+            return cell.X is >= 0 and <= fieldSize - 1 && cell.Y is >= 0 and <= fieldSize - 1;
         }
 
         private List<Cell> GetPossibleDiagonalSpecialMoves(Cell secondPlayerPosition, Vector2Int direction)
         {
-            List<Cell> result = new List<Cell>();
+            var result = new List<Cell>();
             Func<Cell, Vector2Int, bool> moveExists =
-                (Cell from, Vector2Int dir) => (!WallExists(from, dir) && IsInFieldBorders(from + dir));
+                (@from, dir) => (!WallExists(from, dir) && IsInFieldBorders(from + dir));
 
             if (direction == Cell.UnaryDown || direction == Cell.UnaryUp)
             {
@@ -67,29 +66,29 @@ namespace Quoridor.Model
             return result;
         }
 
-        private List<Cell> ReplaceOnPossibleSpecialMoves(List<Cell> availableMoves, Cell firstPlayerPosition, Cell secondPlayerPosition)
+        private List<Cell> ReplaceOnPossibleSpecialMoves(List<Cell> availableMoves, Player firstPlayer, Player secondPlayer)
         {
-            List<Cell> result = availableMoves;
+            var result = availableMoves;
 
-            bool isSpecialMovePossible = availableMoves.Contains(secondPlayerPosition);
+            var isSpecialMovePossible = availableMoves.Contains(secondPlayer.Position);
             if (isSpecialMovePossible)
             {
-                result.Remove(secondPlayerPosition);
-                Vector2Int direction = secondPlayerPosition - firstPlayerPosition;
+                result.Remove(secondPlayer.Position);
+                var direction = secondPlayer.Position - firstPlayer.Position;
 
-                if (WallExists(secondPlayerPosition, direction))
-                    result.AddRange(GetPossibleDiagonalSpecialMoves(secondPlayerPosition, direction));
+                if (WallExists(secondPlayer.Position, direction))
+                    result.AddRange(GetPossibleDiagonalSpecialMoves(secondPlayer.Position, direction));
                 else
-                    result.Add(secondPlayerPosition + direction);
+                    result.Add(secondPlayer.Position + direction);
             }
 
             return result;
         }
 
-        public List<Cell> GeneratePossibleMoves(Cell firstPlayerPosition, Cell secondPlayerPosition)
+        public List<Cell> GeneratePossibleMoves(Player firstPlayer, Player secondPlayer)
         {
-            List<Cell> result = cells[firstPlayerPosition.X, firstPlayerPosition.Y];
-            result = ReplaceOnPossibleSpecialMoves(result, firstPlayerPosition, secondPlayerPosition);
+            var result = cells[firstPlayer.Position.X, firstPlayer.Position.Y];
+            result = ReplaceOnPossibleSpecialMoves(result, firstPlayer, secondPlayer);
 
             return result;
         }
@@ -124,54 +123,56 @@ namespace Quoridor.Model
             }
         }
 
-        public bool AddWall(Wall wall, Cell firstPlayerPosition, Cell secondPlayerPosition, Cell target)
+        public bool AddWall(Wall wall, Player firstPlayer, Player secondPlayer, Dictionary<string, List<Cell>> targets)
         {
-            RemovePassages(wall);
+            if (!CheckWallConsistency(wall)) return false;
             
-            bool firstNearWallExists, secondNearWallExists, intersectingWallExists;
-            firstNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryUp : Vector2Int.UnaryLeft)));
-            secondNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryDown : Vector2Int.UnaryRight)));
-            intersectingWallExists = wallsList.Any(wallElement => wallElement == wall.Reverse());
+            RemovePassages(wall);
+
+            var firstNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryUp : Vector2Int.UnaryLeft)));
+            var secondNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryDown : Vector2Int.UnaryRight)));
+            var intersectingWallExists = wallsList.Any(wallElement => wallElement == wall.Reverse());
 
             if (wallsList.Contains(wall)   // the wall already exists
                 || firstNearWallExists    // a wall overlaps the new one
                 || secondNearWallExists   // ~
                 || intersectingWallExists // ~
-                || !WinningWaysExist(firstPlayerPosition, secondPlayerPosition, target)) // the wall blocks someone
+                || !WinningWaysExist(firstPlayer, secondPlayer, targets)) // the wall blocks someone
             {
                 AddPassages(wall);
                 return false;
             }
-            else
-                wallsList.Add(wall);
 
+            wallsList.Add(wall);
             return true;
         }
 
-        private bool WayExists(Cell from, Cell to, ref List<Cell> visitedCells)
+        private bool CheckWallConsistency(Wall wall)
+        {
+            return !(from cell in wall.cells let t = wall.cells.Where(c => Math.Abs(cell.X - c.X) == 1).ToList() let m = wall.cells.Where(c => Math.Abs(cell.Y - c.Y) == 1).ToList() let q = wall.cells.Exists(c => Math.Abs(cell.X - c.X) == 1 && Math.Abs(cell.Y - c.Y) == 1) where t.Count != 2 || m.Count != 2 && !q select t).Any();
+        }
+
+        private bool WayExists(Cell from, List<Cell> to, ref List<Cell> visitedCells)
         {
             foreach (var cell in cells[from.X, from.Y])
             {
                 if (!visitedCells.Contains(cell))
                 {
-                    if (cell == to) return true;
-                    else
-                    {
-                        visitedCells.Add(cell);
-                        if (WayExists(cell, to, ref visitedCells)) return true;
-                    }
+                    if (to.Contains(cell)) return true;
+                    visitedCells.Add(cell);
+                    if (WayExists(cell, to, ref visitedCells)) return true;
                 }
             }
             return false;
         }
 
-        private bool WinningWaysExist(Cell firstPlayerPosition, Cell secondPlayerPosition, Cell target)
+        private bool WinningWaysExist(Player firstPlayer, Player secondPlayer, Dictionary<string, List<Cell>> targets)
         {
-            var visitedCells = new List<Cell>() { firstPlayerPosition };
-            bool firstPlayerWayExists = WayExists(firstPlayerPosition, target, ref visitedCells);
+            var visitedCells = new List<Cell>() { firstPlayer.Position };
+            var firstPlayerWayExists = WayExists(firstPlayer.Position, targets[firstPlayer.Name], ref visitedCells);
 
-            visitedCells = new List<Cell>() { secondPlayerPosition };
-            bool secondPlayerWayExists = WayExists(secondPlayerPosition, target, ref visitedCells);
+            visitedCells = new List<Cell>() { secondPlayer.Position };
+            var secondPlayerWayExists = WayExists(secondPlayer.Position, targets[firstPlayer.Name], ref visitedCells);
 
             return firstPlayerWayExists && secondPlayerWayExists;
         }
@@ -181,5 +182,6 @@ namespace Quoridor.Model
         public const int fieldSize = 9;
         private List<Cell>[,] cells;
         private List<Wall> wallsList;
+        public List<Wall> Walls => wallsList;
     }
 }
