@@ -7,8 +7,10 @@ namespace Quoridor.Model
     {
         public event Action<List<Player>, List<Wall>> GameStarted;
         public event Action<List<Player>, List<Wall>> FieldUpdated;
-        public event Action<Player> WrongActivity; 
+        public event Action<bool, Player> WrongActivity; 
         public event Action<Player> PlayerWon;
+        public event Action HelpRequest;
+        public event Action<Player> CurrentPlayerRequest;
 
         public QuoridorEvents(Player firstPlayer, Player secondPlayer, Dictionary<String, List<Cell>> targets) : 
             base(firstPlayer, secondPlayer, targets)
@@ -37,7 +39,7 @@ namespace Quoridor.Model
             }
             else
             {
-                WrongActivity?.Invoke(CurrentPlayer);
+                WrongActivity?.Invoke(true, CurrentPlayer);
             }
             return result;
         }
@@ -54,9 +56,20 @@ namespace Quoridor.Model
                 return true;
             }
 
-            WrongActivity?.Invoke(CurrentPlayer);
+            WrongActivity?.Invoke(false, CurrentPlayer);
             return false;
         }
+
+        public void GetHelp()
+        {
+            HelpRequest?.Invoke();
+        }
+
+        public void GetCurrentPlayer()
+        {
+            CurrentPlayerRequest?.Invoke(CurrentPlayer);
+        }
+        
         
     }
 }

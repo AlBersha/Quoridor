@@ -34,7 +34,7 @@ namespace Quoridor.Input
                         }
                         catch (Exception)
                         {
-                            Console.WriteLine("You have entered not enough data to build the wall. Try again please!");
+                            Console.WriteLine("You have entered not enough or wrong data to build the wall. Try again please!");
                         }
                         break;
                     case "move":
@@ -46,11 +46,15 @@ namespace Quoridor.Input
                         }
                         catch (Exception e)
                         {
-                            Console.Out.WriteLine("You've entered not enough info to make move. Try again please!");
+                            Console.Out.WriteLine("You've entered not enough or wrong info to make move. Try again please!");
                         }
                         break;
                     case "h":
                     case "help":
+                        game.GetHelp();
+                        break;
+                    case "turn":
+                        game.GetCurrentPlayer();
                         break;
                     case "exit":
                         Console.WriteLine("Thanks for playing wonderful Quoridor!");

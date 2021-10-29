@@ -9,18 +9,18 @@ namespace Quoridor.View
     {
         private int FieldWidth { get; set; }
         private int FieldHeight { get; set; }
-        // private QuoridorEvents game;
         
         public void SetUpGame(QuoridorEvents game, int fieldWidth, int fieldHeight)
         {
             FieldWidth = fieldWidth;
             FieldHeight = fieldHeight;
             
-            // this.game = game;
             game.FieldUpdated += PrintGameField;
             game.GameStarted += GameStarted;
             game.PlayerWon += PlayerWon;
             game.WrongActivity += OnWrongActivity;
+            game.HelpRequest += OnHelpRequest;
+            game.CurrentPlayerRequest += OnCurrentPlayerRequest;
         }
 
         private void PrintGameField(List<Player> playersPosition, List<Wall> walls)
@@ -36,7 +36,16 @@ namespace Quoridor.View
                 for (var j = 0; j < FieldWidth; j++)
                 {
                     var player = playersPosition.Find(player => player.Position.X == i && player.Position.Y == j);
-                    Console.Out.Write(player != null ? $" {player.Name} " : $"{i},{j}");
+                    if (player != null)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.Out.Write($" {player.Name} ");
+                        Console.ForegroundColor = ConsoleColor.White;
+                    }
+                    else
+                    {
+                        Console.Out.Write($"{i},{j}");
+                    }
 
                     var wallExists = walls.Any(wall => wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i && cell.Y == j + 1));
                     if (wallExists)
@@ -81,9 +90,25 @@ namespace Quoridor.View
             PrintGameField(playersPosition, walls);
         }
 
-        private void OnWrongActivity(Player player)
+        private void OnWrongActivity(bool isMove, Player player)
         {
-            Console.Out.WriteLine($"Wrong activity data for player {player.Name}. The cell is either busy or unreachable");
+            Console.Out.Write($"Wrong activity for player {player.Name}.");
+            Console.Out.Write(
+                isMove ? " The cell is either busy or unreachable.\n" : " The position of wall is either unacceptable or incorrect.\n");
+        }
+
+        private void OnHelpRequest()
+        {
+            Console.Out.WriteLine("To build the wall print \"WALL x1 y1 x2 y2 x3 y3 x4 y4 TRUE (if your wall is vertical) / FALSE (if a wall is horizontal)\nwhere x, y - cell coordinates" +
+                                  "\nTo make a move print MOVE x y" +
+                                  "\nTo suggest or comment write to @Necessity or @vermi4elli\n");
+        }
+
+        private void OnCurrentPlayerRequest(Player player)
+        {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Out.WriteLine(player is null ? "Start game first": $"{player.Name}");
+            Console.ForegroundColor = ConsoleColor.White;
         }
         
         
