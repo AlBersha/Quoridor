@@ -24,7 +24,7 @@ namespace Quoridor.Model
 
         private List<Cell> GeneratePassages(Cell from)
         {
-            List<Cell> result = new List<Cell>();
+            var result = new List<Cell>();
 
             if (from.X > 0) result.Add(new Cell(from.X - 1, from.Y));
             if (from.Y > 0) result.Add(new Cell(from.X, from.Y - 1));
@@ -36,22 +36,21 @@ namespace Quoridor.Model
 
         private bool WallExists(Cell from, Vector2Int direction)
         {
-            Cell possibleWallCell = from + direction;
+            var possibleWallCell = from + direction;
 
             return !cells[from.X, from.Y].Contains(possibleWallCell);
         }
 
         private bool IsInFieldBorders(Cell cell)
         {
-            return cell.X >= 0 && cell.X <= fieldSize - 1 &&
-                cell.Y >= 0 && cell.Y <= fieldSize - 1;
+            return cell.X is >= 0 and <= fieldSize - 1 && cell.Y is >= 0 and <= fieldSize - 1;
         }
 
         private List<Cell> GetPossibleDiagonalSpecialMoves(Cell secondPlayerPosition, Vector2Int direction)
         {
-            List<Cell> result = new List<Cell>();
+            var result = new List<Cell>();
             Func<Cell, Vector2Int, bool> moveExists =
-                (Cell from, Vector2Int dir) => (!WallExists(from, dir) && IsInFieldBorders(from + dir));
+                (@from, dir) => (!WallExists(from, dir) && IsInFieldBorders(from + dir));
 
             if (direction == Cell.UnaryDown || direction == Cell.UnaryUp)
             {
@@ -69,13 +68,13 @@ namespace Quoridor.Model
 
         private List<Cell> ReplaceOnPossibleSpecialMoves(List<Cell> availableMoves, Player firstPlayer, Player secondPlayer)
         {
-            List<Cell> result = availableMoves;
+            var result = availableMoves;
 
-            bool isSpecialMovePossible = availableMoves.Contains(secondPlayer.Position);
+            var isSpecialMovePossible = availableMoves.Contains(secondPlayer.Position);
             if (isSpecialMovePossible)
             {
                 result.Remove(secondPlayer.Position);
-                Vector2Int direction = secondPlayer.Position - firstPlayer.Position;
+                var direction = secondPlayer.Position - firstPlayer.Position;
 
                 if (WallExists(secondPlayer.Position, direction))
                     result.AddRange(GetPossibleDiagonalSpecialMoves(secondPlayer.Position, direction));
@@ -88,7 +87,7 @@ namespace Quoridor.Model
 
         public List<Cell> GeneratePossibleMoves(Player firstPlayer, Player secondPlayer)
         {
-            List<Cell> result = cells[firstPlayer.Position.X, firstPlayer.Position.Y];
+            var result = cells[firstPlayer.Position.X, firstPlayer.Position.Y];
             result = ReplaceOnPossibleSpecialMoves(result, firstPlayer, secondPlayer);
 
             return result;
@@ -124,14 +123,13 @@ namespace Quoridor.Model
             }
         }
 
-        public bool AddWall(Wall wall, Player firstPlayer, Player secondPlayer, Dictionary<Player, List<Cell>> targets)
+        public bool AddWall(Wall wall, Player firstPlayer, Player secondPlayer, Dictionary<string, List<Cell>> targets)
         {
             RemovePassages(wall);
-            
-            bool firstNearWallExists, secondNearWallExists, intersectingWallExists;
-            firstNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryUp : Vector2Int.UnaryLeft)));
-            secondNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryDown : Vector2Int.UnaryRight)));
-            intersectingWallExists = wallsList.Any(wallElement => wallElement == wall.Reverse());
+
+            var firstNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryUp : Vector2Int.UnaryLeft)));
+            var secondNearWallExists = wallsList.Any(wallElement => wallElement == (wall + (wall.isVertical ? Vector2Int.UnaryDown : Vector2Int.UnaryRight)));
+            var intersectingWallExists = wallsList.Any(wallElement => wallElement == wall.Reverse());
 
             if (wallsList.Contains(wall)   // the wall already exists
                 || firstNearWallExists    // a wall overlaps the new one
@@ -162,13 +160,13 @@ namespace Quoridor.Model
             return false;
         }
 
-        private bool WinningWaysExist(Player firstPlayer, Player secondPlayer, Dictionary<Player, List<Cell>> targets)
+        private bool WinningWaysExist(Player firstPlayer, Player secondPlayer, Dictionary<string, List<Cell>> targets)
         {
             var visitedCells = new List<Cell>() { firstPlayer.Position };
-            bool firstPlayerWayExists = WayExists(firstPlayer.Position, targets[firstPlayer], ref visitedCells);
+            var firstPlayerWayExists = WayExists(firstPlayer.Position, targets[firstPlayer.Name], ref visitedCells);
 
             visitedCells = new List<Cell>() { secondPlayer.Position };
-            bool secondPlayerWayExists = WayExists(secondPlayer.Position, targets[firstPlayer], ref visitedCells);
+            var secondPlayerWayExists = WayExists(secondPlayer.Position, targets[firstPlayer.Name], ref visitedCells);
 
             return firstPlayerWayExists && secondPlayerWayExists;
         }
@@ -178,5 +176,6 @@ namespace Quoridor.Model
         public const int fieldSize = 9;
         private List<Cell>[,] cells;
         private List<Wall> wallsList;
+        public List<Wall> Walls => wallsList;
     }
 }

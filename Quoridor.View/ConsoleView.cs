@@ -9,21 +9,18 @@ namespace Quoridor.View
     {
         private int FieldWidth { get; set; }
         private int FieldHeight { get; set; }
-        private QuoridorEvents game;
-
-        public ConsoleView(QuoridorEvents game)
+        // private QuoridorEvents game;
+        
+        public void SetUpGame(QuoridorEvents game, int fieldWidth, int fieldHeight)
         {
-            FieldWidth = 9;
-            FieldHeight = 9;
-
-            this.game = game;
-        }
-        public ConsoleView(int width, int height, QuoridorEvents game)
-        {
-            FieldWidth = width;
-            FieldHeight = height;
-
-            this.game = game;
+            FieldWidth = fieldWidth;
+            FieldHeight = fieldHeight;
+            
+            // this.game = game;
+            game.FieldUpdated += PrintGameField;
+            game.GameStarted += GameStarted;
+            game.PlayerWon += PlayerWon;
+            game.WrongActivity += OnWrongActivity;
         }
 
         private void PrintGameField(List<Player> playersPosition, List<Wall> walls)
@@ -75,12 +72,18 @@ namespace Quoridor.View
         
         private void PlayerWon(Player player)
         {
-            Console.Out.WriteLine($"Game is over! Player {player.Name} won!");
+            Console.Out.WriteLine($"Game is over! Player {player.Name} won!\n\nType EXIT to end game, type START to continue playing");
         }
         
-        private void GameStarted(Cell[,] obj)
+        private void GameStarted(List<Player> playersPosition, List<Wall> walls)
         {
-            Console.Out.WriteLine("The game has begun. Build a wall \nor make a move");
+            Console.Out.WriteLine("The game has begun. Build a wall or make a move");
+            PrintGameField(playersPosition, walls);
+        }
+
+        private void OnWrongActivity(Player player)
+        {
+            Console.Out.WriteLine($"Wrong activity data for player {player.Name}. The cell is either busy or unreachable");
         }
         
         

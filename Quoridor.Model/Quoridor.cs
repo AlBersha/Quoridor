@@ -8,68 +8,85 @@ namespace Quoridor.Model
 
         private readonly Player secondPlayer;
         
-        private readonly Dictionary<Player, List<Cell>> targets;
+        private readonly Dictionary<string, List<Cell>> targets;
 
-        private GameField gameField;
+        protected GameField gameField { get; private set; }
 
-        public Player CurrentPlayer { get; private set; }
-        public Player NextPlayer { get; private set; }
+        protected Player CurrentPlayer { get; private set; }
+        protected Player NextPlayer { get; private set; }
 
         public Player Winner { get; private set; }
 
         public bool IsEnded { get; private set; }
 
-        public Quoridor(Player firstPlayer, Player secondPlayer, Dictionary<Player, List<Cell>> targets)
+        protected Quoridor(Player firstPlayer, Player secondPlayer, Dictionary<string, List<Cell>> targets)
         {
             this.firstPlayer = firstPlayer;
             this.secondPlayer = secondPlayer;
             this.targets = targets;
-        
-            SetFirstPlayerActive();
-            gameField = new GameField();
+            
+            // SetFirstPlayerActive();
+            // gameField = new GameField();
         }
         
-        public void StartGame()
+        public virtual void StartGame()
         {         
             SetFirstPlayerActive();
             gameField = new GameField();
+
+            Winner = null;
+            IsEnded = false;
         }
 
         private void SetFirstPlayerActive()
         {
+            ResetPlayersPosition();
             CurrentPlayer = firstPlayer;
             NextPlayer = secondPlayer;
         }
 
-        public void SwitchSides()
+        private void ResetPlayersPosition()
+        {
+            firstPlayer.Position = new Cell(0, 4);
+            secondPlayer.Position = new Cell(8, 4);
+        }
+
+        private void SwitchSides()
         {
             CurrentPlayer = NextPlayer;
             NextPlayer = NextPlayer == firstPlayer ? secondPlayer : firstPlayer;
         }
 
-        public List<Cell> GetPlayerMoves()
+        private List<Cell> GetPlayerMoves()
         {
             return gameField.GeneratePossibleMoves(CurrentPlayer, NextPlayer);
         }
 
-        public bool MovePlayer(Cell to)
+        public virtual bool MovePlayer(Cell to)
         {
             if (GetPlayerMoves().Contains(to))
             {
                 CurrentPlayer.Position = to;
+                if (IsVictoryAchieved())
+                {
+                    Winner = CurrentPlayer;
+                    IsEnded = true;
+                    return true;
+                }
+                SwitchSides();
                 return true;
             }
             return false;
         }
 
-        public bool TryAddingWall(Wall wall)
+        public virtual bool TryAddingWall(Wall wall)
         {
             return gameField.AddWall(wall, CurrentPlayer, NextPlayer, targets);
         }
 
-        public bool IsVictoryAchieved()
+        private bool IsVictoryAchieved()
         {
-            return targets[CurrentPlayer]
+            return targets[CurrentPlayer.Name]
                 .Exists(cell => cell.X == CurrentPlayer.Position.X && cell.Y == CurrentPlayer.Position.Y);
         }
     }

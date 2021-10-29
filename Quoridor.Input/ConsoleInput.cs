@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
+using System.Text.RegularExpressions;
 using Quoridor.Model;
 
 namespace Quoridor.Input
@@ -8,18 +8,18 @@ namespace Quoridor.Input
     {
         public void ProcessInput(QuoridorEvents game)
         {
-            while (true)
+            Console.WriteLine("Print START to play game");
+            var continuePlay = true;
+            while (continuePlay)
             {
-                Console.WriteLine("Print START and amount of players (2 or 4) to play game\n");
                 var command = Console.ReadLine();
-                var split = command.Split(' ', ',', '(', ')');
+                command = Regex.Replace(command ?? string.Empty, @"\s+", " ");
+                var split = command.Split(' ', ',', '(', ')', ';');
 
                 switch (split[0].ToLower())
                 {
                     case "start":
-                        //todo start the game
                         game.StartGame();
-                        Console.Out.WriteLine("The game has begun. Build a wall \nor make a move");
                         break;
                     case "wall":
                         try
@@ -38,18 +38,24 @@ namespace Quoridor.Input
                         {
                             Console.WriteLine("You have entered not enough data to build the wall. Try again please!");
                         }
-                        //todo process wall building
                         break;
                     case "move":
-                        var moveTo = new Cell(int.Parse(split[1]), int.Parse(split[2]));
-                        
-                        game.MovePlayer(moveTo);
-                        //todo process the move ;)
+                        try
+                        {
+                            var moveTo = new Cell(int.Parse(split[1]), int.Parse(split[2]));
+                            game.MovePlayer(moveTo);
+
+                        }
+                        catch (Exception e)
+                        {
+                            Console.Out.WriteLine("You've entered not enough info to make move. Try again please!");
+                        }
                         break;
                     case "help":
                         break;
                     case "exit":
                         Console.WriteLine("Thanks for playing wonderful Quoridor!");
+                        continuePlay = false;
                         break;
                 }
             }
