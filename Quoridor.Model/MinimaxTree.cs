@@ -6,28 +6,67 @@ namespace Quoridor.Model
     {
         class Node
         {
-            public Node(GameField gameField, Player player, Player enemy, List<Cell> targets, int currentDepth)
+            public Node(GameField gameField, Player player, Player enemy, List<Cell> targets, int currentDepth, bool recalculatePaths, int bestPathLengthPlayer, List<Cell> bestPathPlayer, int bestPathLengthEnemy, List<Cell> bestPathEnemy)
             {
                 this.gameField = gameField;
                 this.player = player;
                 this.enemy = enemy;
                 this.depth = currentDepth;
                 this.targets = targets;
+
+                if (currentDepth == 0 || recalculatePaths)
+                    GenerateBestPaths();
+                else
+                {
+                    this.bestPathLengthPlayer = bestPathLengthPlayer;
+                    this.bestPathPlayer = bestPathPlayer;
+
+                    this.bestPathLengthEnemy = bestPathLengthEnemy;
+                    this.bestPathEnemy = bestPathEnemy;
+                }
+                
                 this.value = GetCurrentEvaluation(gameField, player, enemy);
-                if (depth != maxDepth)
+
+                if (depth != maxDepth && !targets.Contains(player.Position) && !targets.Contains(enemy.Position))
                     this.children = GenerateChildren();
                 else
                     this.children = new List<Node>();
             }
 
-            private List<Node> GenerateChildren()
+            private void GenerateBestPaths()
             {
-                return new List<Node>();
+                List<Cell> visitedCells = new List<Cell>();
+                (this.bestPathLengthPlayer, this.bestPathPlayer) = GetBestPath(player.Position, targets, 1, ref visitedCells, new List<Cell>());
+
+                visitedCells.Clear();
+                (this.bestPathLengthEnemy, this.bestPathEnemy) = GetBestPath(enemy.Position, targets, 1, ref visitedCells, new List<Cell>());
             }
 
-            private int GetCurrentEvaluation(GameField gameField, Player player, Player enemy)
+            private List<Node> GenerateChildren()
             {
-                return 0;
+                List<Node> children = new List<Node>();
+
+                if (IsMovingTheBestChoice())
+                {
+                    Player nextPlayerState = player;
+                    nextPlayerState.Position = bestPathPlayer[bestPathPlayer.FindIndex(cell => cell == player.Position) + 1];
+                    children.Add(new Node(gameField, nextPlayerState, enemy, targets, depth + 1, false, bestPathLengthPlayer, bestPathPlayer, bestPathLengthEnemy, bestPathEnemy));
+                }
+                else if (IsVerticalWallPlacingTheBestChoice())
+                {
+
+                }
+                else
+                {
+
+                }
+
+                return children;
+            }
+
+            private float GetCurrentEvaluation(GameField gameField, Player player, Player enemy)
+            {
+                return bestPathLengthEnemy / bestPathLengthPlayer;
             }
 
             private bool IsVerticalWallInTheWay(int Y1, int Y2, int X)
@@ -52,7 +91,33 @@ namespace Quoridor.Model
 
             private bool IsMovingTheBestChoice()
             {
-                return false;
+                return bestPathLengthPlayer < bestPathLengthEnemy;
+            }
+
+            private (int, List<Cell>) GetBestPath(Cell from, List<Cell> to, int length, ref List<Cell> visitedCells, List<Cell> path)
+            {
+                foreach (var cell in gameField.GetPassages(from))
+                    if (to.Contains(cell))
+                        return (length, path);
+
+                int shortest_length = 100;
+                List<Cell> shortest_path = new List<Cell>();
+
+                foreach (var cell in gameField.GetPassages(from))
+                {
+                    if (!visitedCells.Contains(cell))
+                    {
+                        visitedCells.Add(cell);
+                        (int found_length, List<Cell> found_path) = GetBestPath(cell, to, length + 1, ref visitedCells, path);
+                        if (found_length < shortest_length)
+                        {
+                            shortest_length = found_length;
+                            shortest_path = found_path;
+                        }
+                    }
+                }
+
+                return (shortest_length, shortest_path);
             }
 
             private bool IsVerticalWallPlacingTheBestChoice()
@@ -60,16 +125,18 @@ namespace Quoridor.Model
                 return targets.Exists(target => target.X == enemy.Position.X);
             }
 
-            private bool IsHorizontalWallPlacingTheBestChoice()
-            {
-                return targets.Exists(target => target.Y == enemy.Position.Y);
-            }
-
             GameField gameField;
             Player player;
             Player enemy;
-            int value;
+            float value;
             int depth;
+            
+            int bestPathLengthEnemy;
+            List<Cell> bestPathEnemy;
+
+            int bestPathLengthPlayer;
+            List<Cell> bestPathPlayer;
+
             static int maxDepth = 5;
             private List<Node> children;
             private List<Cell> targets;
