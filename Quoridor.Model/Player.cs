@@ -6,11 +6,13 @@ namespace Quoridor.Model
     {
         public string Name { get; private set; }
         public Cell Position { get; set; }
+        public int WallsLeft { get; set; }
 
         public Player(string name, Cell position)
         {
             Name = name;
             Position = position;
+            WallsLeft = 10;
         }
     }
 }

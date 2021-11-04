@@ -25,6 +25,9 @@ namespace Quoridor.View
 
         private void PrintGameField(List<Player> playersPosition, List<Wall> walls)
         {
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Out.WriteLine($"\nWalls left: {playersPosition[1].WallsLeft}");
+            Console.ForegroundColor = ConsoleColor.White;
             for (var i = 0; i < FieldWidth; i++)
             {
                 Console.Write(" ———");
@@ -77,6 +80,10 @@ namespace Quoridor.View
                 }
                 Console.Out.WriteLine();
             }
+            
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Out.WriteLine($"Walls left: {playersPosition[0].WallsLeft}\n");
+            Console.ForegroundColor = ConsoleColor.White;
         }
         
         private void PlayerWon(Player player)
@@ -94,7 +101,7 @@ namespace Quoridor.View
         {
             Console.Out.Write($"Wrong activity for player {player.Name}.");
             Console.Out.Write(
-                isMove ? " The cell is either busy or unreachable.\n" : " The position of wall is either unacceptable or incorrect.\n");
+                isMove ? " The cell is either busy or unreachable.\n" : " The position of wall is either unacceptable or incorrect. \nOr you have built as many walls as possible. Pay attention to wall counter\n");
         }
 
         private void OnHelpRequest()

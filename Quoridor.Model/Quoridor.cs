@@ -29,6 +29,7 @@ namespace Quoridor.Model
         public virtual void StartGame()
         {         
             SetFirstPlayerActive();
+            ResetWallsCounter();
             gameField = new GameField();
 
             Winner = null;
@@ -46,6 +47,12 @@ namespace Quoridor.Model
         {
             firstPlayer.Position = new Cell(0, 4);
             secondPlayer.Position = new Cell(8, 4);
+        }
+
+        private void ResetWallsCounter()
+        {
+            firstPlayer.WallsLeft = 10;
+            secondPlayer.WallsLeft = 10;
         }
 
         private void SwitchSides()
