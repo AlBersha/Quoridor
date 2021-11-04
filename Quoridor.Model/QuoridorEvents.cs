@@ -48,6 +48,7 @@ namespace Quoridor.Model
         {
             if (CurrentPlayer.WallsLeft < 1)
             {
+                WrongActivity?.Invoke(false, CurrentPlayer);
                 return false;
             }
             if (base.TryAddingWall(wall))

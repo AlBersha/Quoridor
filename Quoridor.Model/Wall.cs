@@ -86,6 +86,6 @@ namespace Quoridor.Model
         }
 
         public Cells cells { get; }
-        public bool isVertical { get; private set; }
+        public bool isVertical { get; }
     }
 }

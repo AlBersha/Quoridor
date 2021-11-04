@@ -12,7 +12,6 @@ namespace Quoridor.Model
         {
             Name = name;
             Position = position;
-            WallsLeft = 10;
         }
     }
 }
