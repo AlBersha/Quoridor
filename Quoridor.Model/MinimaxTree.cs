@@ -6,15 +6,16 @@ namespace Quoridor.Model
     {
         class Node
         {
-            public Node(GameField gameField, Player player, Player enemy, List<Cell> targets, int currentDepth, bool recalculatePaths, int bestPathLengthPlayer, List<Cell> bestPathPlayer, int bestPathLengthEnemy, List<Cell> bestPathEnemy)
+            public Node(GameField gameField, Player player, Player enemy, List<Cell> targets, int depth, bool recalculatePaths, int bestPathLengthPlayer, List<Cell> bestPathPlayer, int bestPathLengthEnemy, List<Cell> bestPathEnemy)
             {
                 this.gameField = gameField;
                 this.player = player;
                 this.enemy = enemy;
-                this.depth = currentDepth;
+                this.depth = depth;
                 this.targets = targets;
+                this.isPlayersTurn = depth % 2 == 0;
 
-                if (currentDepth == 0 || recalculatePaths)
+                if (depth == 0 || recalculatePaths)
                     GenerateBestPaths();
                 else
                 {
@@ -31,6 +32,41 @@ namespace Quoridor.Model
                     this.children = GenerateChildren();
                 else
                     this.children = new List<Node>();
+            }
+
+            private List<Node> PlaceWallsCloseToCell(Cell cell, bool vertically)
+            {
+                if (vertically ? cell.Y <= ta)
+                {
+
+                }
+
+                
+            }
+            
+            private List<Node> PlaceWallsCloseToTargets(bool vertically)
+            {
+                return new List<Node>();
+            }
+
+            private List<Node> GenerateVerticalWallsPlacingChildren()
+            {
+                List<Node> resulting_children = new List<Node>();
+
+                resulting_children.InsertRange(0, PlaceWallsCloseToCell(isPlayersTurn ? player.Position : enemy.Position, true));
+                resulting_children.InsertRange(0, PlaceWallsCloseToTargets(true));
+
+                return resulting_children;
+            }
+            
+            private List<Node> GenerateHorizontalWallsPlacingChildren()
+            {
+                List<Node> resulting_children = new List<Node>();
+
+                resulting_children.InsertRange(0, PlaceWallsCloseToCell(isPlayersTurn ? player.Position : enemy.Position, false));
+                resulting_children.InsertRange(0, PlaceWallsCloseToTargets(false));
+
+                return resulting_children;
             }
 
             private void GenerateBestPaths()
@@ -53,13 +89,9 @@ namespace Quoridor.Model
                     children.Add(new Node(gameField, nextPlayerState, enemy, targets, depth + 1, false, bestPathLengthPlayer, bestPathPlayer, bestPathLengthEnemy, bestPathEnemy));
                 }
                 else if (IsVerticalWallPlacingTheBestChoice())
-                {
-
-                }
+                    children.InsertRange(0, GenerateVerticalWallsPlacingChildren());
                 else
-                {
-
-                }
+                    children.InsertRange(0, GenerateHorizontalWallsPlacingChildren());
 
                 return children;
             }
@@ -122,22 +154,29 @@ namespace Quoridor.Model
 
             private bool IsVerticalWallPlacingTheBestChoice()
             {
-                return targets.Exists(target => target.X == enemy.Position.X);
+                return targets.Exists(target => (
+                    (enemy.Position.Y >= target.Y - GameField.fieldSize / 4) &&
+                    (enemy.Position.Y <= target.Y + GameField.fieldSize / 4)
+                ));
             }
 
             GameField gameField;
+            
             Player player;
             Player enemy;
+
             float value;
+
             int depth;
-            
+            bool isPlayersTurn;
+            static int maxDepth = 5;
+
             int bestPathLengthEnemy;
             List<Cell> bestPathEnemy;
 
             int bestPathLengthPlayer;
             List<Cell> bestPathPlayer;
 
-            static int maxDepth = 5;
             private List<Node> children;
             private List<Cell> targets;
         }
