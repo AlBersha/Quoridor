@@ -81,7 +81,6 @@ namespace Quoridor.Model
             if (!gameField.AddWall(wall, CurrentPlayer, NextPlayer, targets)) return false;
             SwitchSides();
             return true;
-
         }
 
         private bool IsVictoryAchieved()
