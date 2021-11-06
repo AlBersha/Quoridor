@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Quoridor.Model
@@ -13,9 +14,6 @@ namespace Quoridor.Model
                 this.enemy = enemy;
                 this.depth = depth;
                 this.targets = targets;
-                isPlayersTurn = depth % 2 == 0;
-                this.currentPlayer = isPlayersTurn ? player : enemy;
-                this.currentEnemy = isPlayersTurn ? enemy : player;
 
                 if (depth == 0 || recalculatePaths)
                     GenerateBestPaths();
@@ -36,22 +34,69 @@ namespace Quoridor.Model
                     children = new List<Node>();
             }
 
-            private List<Node> PlaceWallsCloseToCell(Cell cell, bool vertically)
+            private void TryAddingWallPlacingNode(int leftXPosition, int bottomYPosition, int topYPosition, bool isVerticalWall, ref GameField changedGameField, ref List<Node> children)
             {
-                return new List<Node>();
+                Wall wall = new Wall(
+                        new Cell(leftXPosition, topYPosition),
+                        new Cell(leftXPosition, bottomYPosition),
+                        new Cell(leftXPosition + 1, topYPosition),
+                        new Cell(leftXPosition + 1, bottomYPosition),
+                        isVerticalWall);
+
+                if (changedGameField.AddWall(wall, player, enemy, targets))
+                    children.Add(new Node(changedGameField, enemy, player, targets, depth + 1, true, bestPathLengthEnemy, bestPathEnemy, bestPathLengthPlayer, bestPathPlayer));
+                
+                changedGameField = gameField;
             }
 
-            private List<Node> PlaceWallsCloseToTargets(bool vertically)
+            private List<Node> TryPlacingWallsCloseToEnemy()
             {
-                return new List<Node>();
-            }
+                // TODO add the check for the amount of walls left being 2 or more
+                const bool isWallsCountAbove2 = false;
+                bool bottomToTopMovement = enemy.Position.Y - targets[enemy.Name][0].Y < 0;
+                bool areVerticalWallsPossible = Math.Abs(enemy.Position.Y - targets[enemy.Name][0].Y) > 1;
+                bool areFarVerticalWallsPossible = Math.Abs(enemy.Position.Y - targets[enemy.Name][0].Y) > 2;
 
-            private List<Node> GenerateWallsPlacingChildren()
-            {
                 List<Node> resulting_children = new List<Node>();
+                GameField changedGameField = gameField;
 
-                resulting_children.InsertRange(0, PlaceWallsCloseToCell(isPlayersTurn ? player.Position : enemy.Position, false));
-                resulting_children.InsertRange(0, PlaceWallsCloseToTargets(false));
+                int lowerWallIndexY = enemy.Position.Y;
+                int upperWallIndexY = bottomToTopMovement ? enemy.Position.Y - 1 : enemy.Position.Y + 1;
+
+                // a vertical wall to the left of the player going "upwards"
+                if (enemy.Position.X > 0 && areVerticalWallsPossible && isWallsCountAbove2)
+                    TryAddingWallPlacingNode(enemy.Position.X - 1, lowerWallIndexY, upperWallIndexY, true, ref changedGameField, ref resulting_children);
+                
+                // a vertical wall to the far left of the player going "upwards"
+                if (enemy.Position.X > 1 && areVerticalWallsPossible && isWallsCountAbove2)
+                    TryAddingWallPlacingNode(enemy.Position.X - 2, lowerWallIndexY, upperWallIndexY, true, ref changedGameField, ref resulting_children);
+                
+                // a vertical wall to the right of the player going "upwards"
+                if (enemy.Position.X < GameField.fieldSize - 1 && areVerticalWallsPossible && isWallsCountAbove2)
+                    TryAddingWallPlacingNode(enemy.Position.X, lowerWallIndexY, upperWallIndexY, true, ref changedGameField, ref resulting_children);
+                
+                // a vertical wall to the far right of the player going "upwards"
+                if (enemy.Position.X < GameField.fieldSize - 2 && areVerticalWallsPossible && isWallsCountAbove2)
+                    TryAddingWallPlacingNode(enemy.Position.X, lowerWallIndexY, upperWallIndexY, true, ref changedGameField, ref resulting_children);
+                
+                // a horizontal wall right in front of the player going "left"
+                if (enemy.Position.X < GameField.fieldSize - 1 && areVerticalWallsPossible)
+                    TryAddingWallPlacingNode(enemy.Position.X - 1, lowerWallIndexY, upperWallIndexY, false, ref changedGameField, ref resulting_children);
+                
+                // a horizontal wall right in front of the player going "right"
+                if (enemy.Position.X > 0 && areVerticalWallsPossible)
+                    TryAddingWallPlacingNode(enemy.Position.X, lowerWallIndexY, upperWallIndexY, false, ref changedGameField, ref resulting_children);
+
+                int farLowerWallIndexY = upperWallIndexY;
+                int farUpperWallIndexY = bottomToTopMovement ? upperWallIndexY - 1 : upperWallIndexY + 1;
+
+                // a horizontal wall in 1 cell in front of the player going "left"
+                if (enemy.Position.X < GameField.fieldSize - 1 && areFarVerticalWallsPossible)
+                    TryAddingWallPlacingNode(enemy.Position.X - 1, farLowerWallIndexY, farUpperWallIndexY, false, ref changedGameField, ref resulting_children);
+
+                // a horizontal wall in 1 cell in front of the player going "right"
+                if (enemy.Position.X > 0 && areFarVerticalWallsPossible)
+                    TryAddingWallPlacingNode(enemy.Position.X, farLowerWallIndexY, farUpperWallIndexY, false, ref changedGameField, ref resulting_children);
 
                 return resulting_children;
             }
@@ -76,7 +121,7 @@ namespace Quoridor.Model
                     children.Add(new Node(gameField, nextPlayerState, enemy, targets, depth + 1, false, bestPathLengthPlayer, bestPathPlayer, bestPathLengthEnemy, bestPathEnemy));
                 }
                 else
-                    children.InsertRange(0, GenerateHorizontalWallsPlacingChildren());
+                    children.InsertRange(0, TryPlacingWallsCloseToEnemy());
 
                 return children;
             }
@@ -86,25 +131,6 @@ namespace Quoridor.Model
                 return bestPathLengthEnemy / bestPathLengthPlayer;
             }
 
-            private bool IsVerticalWallInTheWay(int Y1, int Y2, int X)
-            {
-                if (Y1 == Y2) return false;
-
-                if (gameField.GetPassages(new Cell(X, Y1)).Contains(new Cell(X, Y1 + 1)))
-                    return IsVerticalWallInTheWay(Y1 + 1, Y2, X);
-                else
-                    return true;
-            }
-
-            private bool IsHorizontalWallInTheWay(int X1, int X2, int Y)
-            {
-                if (X1 == X2) return false;
-
-                if (gameField.GetPassages(new Cell(X1, Y)).Contains(new Cell(X1 + 1, Y)))
-                    return IsHorizontalWallInTheWay(X1 + 1, X2, Y);
-                else
-                    return true;
-            }
 
             private bool IsMovingTheBestChoice()
             {
@@ -141,9 +167,6 @@ namespace Quoridor.Model
             
             Player player;
             Player enemy;
-            
-            Player currentPlayer;
-            Player currentEnemy;
 
             float value;
 
@@ -162,7 +185,6 @@ namespace Quoridor.Model
         }
 
         Node root;
-        int depth = 5;
 
         int currentLevel = 0;
 
