@@ -6,14 +6,16 @@ namespace Quoridor.Model
     {
         class Node
         {
-            public Node(GameField gameField, Player player, Player enemy, List<Cell> targets, int depth, bool recalculatePaths, int bestPathLengthPlayer, List<Cell> bestPathPlayer, int bestPathLengthEnemy, List<Cell> bestPathEnemy)
+            public Node(GameField gameField, Player player, Player enemy, Dictionary<string, List<Cell>> targets, int depth, bool recalculatePaths, int bestPathLengthPlayer, List<Cell> bestPathPlayer, int bestPathLengthEnemy, List<Cell> bestPathEnemy)
             {
                 this.gameField = gameField;
                 this.player = player;
                 this.enemy = enemy;
                 this.depth = depth;
                 this.targets = targets;
-                this.isPlayersTurn = depth % 2 == 0;
+                isPlayersTurn = depth % 2 == 0;
+                this.currentPlayer = isPlayersTurn ? player : enemy;
+                this.currentEnemy = isPlayersTurn ? enemy : player;
 
                 if (depth == 0 || recalculatePaths)
                     GenerateBestPaths();
@@ -28,38 +30,23 @@ namespace Quoridor.Model
                 
                 this.value = GetCurrentEvaluation(gameField, player, enemy);
 
-                if (depth != maxDepth && !targets.Contains(player.Position) && !targets.Contains(enemy.Position))
-                    this.children = GenerateChildren();
+                if (depth != maxDepth && !targets[player.Name].Contains(player.Position) && !targets[enemy.Name].Contains(enemy.Position))
+                    children = GenerateChildren();
                 else
-                    this.children = new List<Node>();
+                    children = new List<Node>();
             }
 
             private List<Node> PlaceWallsCloseToCell(Cell cell, bool vertically)
             {
-                if (vertically ? cell.Y <= ta)
-                {
-
-                }
-
-                
+                return new List<Node>();
             }
-            
+
             private List<Node> PlaceWallsCloseToTargets(bool vertically)
             {
                 return new List<Node>();
             }
 
-            private List<Node> GenerateVerticalWallsPlacingChildren()
-            {
-                List<Node> resulting_children = new List<Node>();
-
-                resulting_children.InsertRange(0, PlaceWallsCloseToCell(isPlayersTurn ? player.Position : enemy.Position, true));
-                resulting_children.InsertRange(0, PlaceWallsCloseToTargets(true));
-
-                return resulting_children;
-            }
-            
-            private List<Node> GenerateHorizontalWallsPlacingChildren()
+            private List<Node> GenerateWallsPlacingChildren()
             {
                 List<Node> resulting_children = new List<Node>();
 
@@ -72,10 +59,10 @@ namespace Quoridor.Model
             private void GenerateBestPaths()
             {
                 List<Cell> visitedCells = new List<Cell>();
-                (this.bestPathLengthPlayer, this.bestPathPlayer) = GetBestPath(player.Position, targets, 1, ref visitedCells, new List<Cell>());
+                (bestPathLengthPlayer, bestPathPlayer) = GetBestPath(player.Position, targets[player.Name], 1, ref visitedCells, new List<Cell>());
 
                 visitedCells.Clear();
-                (this.bestPathLengthEnemy, this.bestPathEnemy) = GetBestPath(enemy.Position, targets, 1, ref visitedCells, new List<Cell>());
+                (bestPathLengthEnemy, bestPathEnemy) = GetBestPath(enemy.Position, targets[enemy.Name], 1, ref visitedCells, new List<Cell>());
             }
 
             private List<Node> GenerateChildren()
@@ -88,8 +75,6 @@ namespace Quoridor.Model
                     nextPlayerState.Position = bestPathPlayer[bestPathPlayer.FindIndex(cell => cell == player.Position) + 1];
                     children.Add(new Node(gameField, nextPlayerState, enemy, targets, depth + 1, false, bestPathLengthPlayer, bestPathPlayer, bestPathLengthEnemy, bestPathEnemy));
                 }
-                else if (IsVerticalWallPlacingTheBestChoice())
-                    children.InsertRange(0, GenerateVerticalWallsPlacingChildren());
                 else
                     children.InsertRange(0, GenerateHorizontalWallsPlacingChildren());
 
@@ -152,24 +137,19 @@ namespace Quoridor.Model
                 return (shortest_length, shortest_path);
             }
 
-            private bool IsVerticalWallPlacingTheBestChoice()
-            {
-                return targets.Exists(target => (
-                    (enemy.Position.Y >= target.Y - GameField.fieldSize / 4) &&
-                    (enemy.Position.Y <= target.Y + GameField.fieldSize / 4)
-                ));
-            }
-
             GameField gameField;
             
             Player player;
             Player enemy;
+            
+            Player currentPlayer;
+            Player currentEnemy;
 
             float value;
 
             int depth;
             bool isPlayersTurn;
-            static int maxDepth = 5;
+            static int maxDepth = 6;
 
             int bestPathLengthEnemy;
             List<Cell> bestPathEnemy;
@@ -178,7 +158,7 @@ namespace Quoridor.Model
             List<Cell> bestPathPlayer;
 
             private List<Node> children;
-            private List<Cell> targets;
+            private Dictionary<string, List<Cell>> targets;
         }
 
         Node root;
