@@ -4,7 +4,7 @@ using Quoridor.Model;
 
 namespace Quoridor.Input
 {
-    public class ConsoleInput
+    public class ConsoleInput: IConsoleInput
     {
         public void ProcessInput(QuoridorEvents game)
         {
@@ -44,7 +44,7 @@ namespace Quoridor.Input
                             game.MovePlayer(moveTo);
 
                         }
-                        catch (Exception e)
+                        catch (Exception)
                         {
                             Console.Out.WriteLine("You've entered not enough or wrong info to make move. Try again please!");
                         }

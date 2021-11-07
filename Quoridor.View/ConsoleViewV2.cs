@@ -5,36 +5,59 @@ using Quoridor.Model;
 
 namespace Quoridor.View
 {
-    public class ConsoleView: IConsoleView
+    public class ConsoleViewV2: IConsoleView
     {
         public int FieldWidth { get; set; }
         public int FieldHeight { get; set; }
-        
+
         public void SetUpGame(QuoridorEvents game, int fieldWidth, int fieldHeight)
         {
-            FieldWidth = fieldWidth;
-            FieldHeight = fieldHeight;
-            
-            game.FieldUpdated += PrintGameField;
-            game.GameStarted += GameStarted;
-            game.PlayerWon += PlayerWon;
-            game.WrongActivity += OnWrongActivity;
-            game.HelpRequest += OnHelpRequest;
-            game.CurrentPlayerRequest += OnCurrentPlayerRequest;
+            throw new NotImplementedException();
+        }
+
+        public ConsoleViewV2(int width, int height)
+        {
+            FieldWidth = width;
+            FieldHeight = height;
         }
 
         public void PrintGameField(List<Player> playersPosition, List<Wall> walls)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Out.WriteLine($"\nWalls left: {playersPosition[1].WallsLeft}");
+            var A = 65;
+            Console.Out.Write("   ");
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            for (var i = 0; i < FieldWidth; i++)
+            {
+                Console.Write($"  {(char)A} ");
+                A++;
+            }
             Console.ForegroundColor = ConsoleColor.White;
+            Console.Out.WriteLine();
+            Console.Out.Write("   ");
             for (var i = 0; i < FieldWidth; i++)
             {
                 Console.Write(" ———");
             }
             Console.WriteLine();
-            for (var i = 0; i < FieldHeight; i++) 
+            for (var i = 0; i < FieldHeight + 1; i++) 
             {
+                if (i == FieldHeight)
+                {
+                    var S = 83;
+                    Console.ForegroundColor = ConsoleColor.Cyan;
+                    Console.Out.Write("    ");
+                    for (var j = 1; j < FieldWidth; j++)
+                    {
+                        Console.Out.Write($"   {(char)S}");
+                        S++;
+                    }
+                    Console.ForegroundColor = ConsoleColor.White;
+                    break;
+                }
+                
+                Console.ForegroundColor = ConsoleColor.Magenta;
+                Console.Out.Write($" {i} ");
+                Console.ForegroundColor = ConsoleColor.White;
                 Console.Write("|");
                 for (var j = 0; j < FieldWidth; j++)
                 {
@@ -47,7 +70,7 @@ namespace Quoridor.View
                     }
                     else
                     {
-                        Console.Out.Write($"{i},{j}");
+                        Console.Out.Write($"   ");
                     }
 
                     var wallExists = walls.Any(wall => wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i && cell.Y == j + 1));
@@ -64,8 +87,17 @@ namespace Quoridor.View
                 }
                 Console.Out.WriteLine();
 
-                for (var j = 0; j < FieldWidth; j++)
+                Console.Out.Write("   ");
+                for (var j = 0; j < FieldWidth + 1; j++)
                 {
+                    if (j == FieldWidth)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Cyan;
+                        Console.Out.Write($"  {i+1}");
+                        Console.ForegroundColor = ConsoleColor.White;
+
+                        break;
+                    }
                     var wallExists = walls.Any(wall => !wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i+1 && cell.Y == j));
                     if (wallExists)
                     {
@@ -77,47 +109,31 @@ namespace Quoridor.View
                     {
                         Console.Out.Write(" ———");
                     }
+
+                    
                 }
                 Console.Out.WriteLine();
             }
-            
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Out.WriteLine($"Walls left: {playersPosition[0].WallsLeft}\n");
-            Console.ForegroundColor = ConsoleColor.White;
         }
-
+        
         public void PlayerWon(Player player)
         {
-            Console.Out.WriteLine($"Game is over! Player {player.Name} won!\n\nType EXIT to end game, type START to continue playing");
+            throw new NotImplementedException();
         }
 
         public void GameStarted(List<Player> playersPosition, List<Wall> walls)
         {
-            Console.Out.WriteLine("The game has begun. Build a wall or make a move");
-            PrintGameField(playersPosition, walls);
-        }
-
-        public void OnWrongActivity(bool isMove, Player player)
-        {
-            Console.Out.Write($"Wrong activity for player {player.Name}.");
-            Console.Out.Write(
-                isMove ? " The cell is either busy or unreachable.\n" : " The position of wall is either unacceptable or incorrect. \nOr you have built as many walls as possible. Pay attention to wall counter\n");
+            throw new NotImplementedException();
         }
 
         public void OnHelpRequest()
         {
-            Console.Out.WriteLine("To build the wall print \"WALL x1 y1 x2 y2 x3 y3 x4 y4 TRUE (if your wall is vertical) / FALSE (if a wall is horizontal)\nwhere x, y - cell coordinates" +
-                                  "\nTo make a move print MOVE x y" +
-                                  "\nTo suggest or comment write to @Necessity or @vermi4elli\n");
+            throw new NotImplementedException();
         }
 
-        private void OnCurrentPlayerRequest(Player player)
+        public void OnWrongActivity(bool isMove, Player player)
         {
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.Out.WriteLine(player is null ? "Start game first": $"{player.Name}");
-            Console.ForegroundColor = ConsoleColor.White;
+            throw new NotImplementedException();
         }
-        
-        
     }
 }
