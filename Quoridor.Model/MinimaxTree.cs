@@ -28,7 +28,7 @@ namespace Quoridor.Model
                     this.bestPathEnemy = bestPathEnemy;
                 }
 
-                if (depth != maxDepth && bestPathLengthPlayer != 0 && bestPathLengthEnemy != 0)
+                if (this.depth != maxDepth && this.bestPathLengthPlayer != 0 && this.bestPathLengthEnemy != 0)
                 {
                     children = GenerateChildren();
 
@@ -81,7 +81,7 @@ namespace Quoridor.Model
                 GameField changedGameField = gameField;
 
                 int lowerWallIndexY = enemy.Position.Y;
-                int upperWallIndexY = bottomToTopMovement ? enemy.Position.Y - 1 : enemy.Position.Y + 1;
+                int upperWallIndexY = !bottomToTopMovement ? enemy.Position.Y - 1 : enemy.Position.Y + 1;
 
                 // a vertical wall to the left of the player going "upwards"
                 if (enemy.Position.X > 0 && areVerticalWallsPossible && isWallsCountAbove2)
@@ -108,7 +108,7 @@ namespace Quoridor.Model
                     TryAddingWallPlacingNode(enemy.Position.X, lowerWallIndexY, upperWallIndexY, false, ref changedGameField, ref resulting_children);
 
                 int farLowerWallIndexY = upperWallIndexY;
-                int farUpperWallIndexY = bottomToTopMovement ? upperWallIndexY - 1 : upperWallIndexY + 1;
+                int farUpperWallIndexY = !bottomToTopMovement ? upperWallIndexY - 1 : upperWallIndexY + 1;
 
                 // a horizontal wall in 1 cell in front of the player going "left"
                 if (enemy.Position.X < GameField.fieldSize - 1 && areFarVerticalWallsPossible)
@@ -124,10 +124,12 @@ namespace Quoridor.Model
             private void GenerateBestPaths()
             {
                 List<Cell> visitedCells = new List<Cell>();
-                (bestPathLengthPlayer, bestPathPlayer) = GetBestPath(player.Position, targets[player.Name]);
+                bestPathPlayer = GetBestPath(player.Position, targets[player.Name]);
+                bestPathLengthPlayer = bestPathPlayer.Count();
 
                 visitedCells.Clear();
-                (bestPathLengthEnemy, bestPathEnemy) = GetBestPath(enemy.Position, targets[enemy.Name]);
+                bestPathEnemy = GetBestPath(enemy.Position, targets[enemy.Name]);
+                bestPathLengthEnemy = bestPathEnemy.Count();
             }
 
             private List<Node> GenerateChildren()
@@ -152,35 +154,48 @@ namespace Quoridor.Model
                 return bestPathLengthPlayer < bestPathLengthEnemy;
             }
 
-            private (int, List<Cell>) GetBestPath(Cell from, List<Cell> to)
+            private List<Cell> GetBestPath(Cell from, List<Cell> to)
             {
-                int length = 0;
                 List<Cell> path = new List<Cell>();
-                List<Cell> visited = new List<Cell>();
+                
+                Dictionary<Cell, bool> visited = new Dictionary<Cell, bool>();
+                for (int indexX = 0; indexX < GameField.fieldSize; indexX++)
+                    for (int indexY = 0; indexY < GameField.fieldSize; indexY++)
+                        visited[new Cell(indexX, indexY)] = false;
+                
                 Queue<Cell> yetToVisit = new Queue<Cell>();
-                Cell currentCell;
+                Dictionary<Cell, Cell> parents = new Dictionary<Cell, Cell>();
 
+                Cell currentCell;
                 yetToVisit.Enqueue(from);
-                visited.Add(from);
+                visited[from] = true;
                 
                 while (yetToVisit.Count() > 0)
                 {
-                    length++;
                     currentCell = yetToVisit.Dequeue();
                     if (to.Contains(currentCell))
                     {
+                        Cell tempCell = currentCell;
+                        path.Add(tempCell);
+
+                        while (parents[tempCell] != from)
+                        {
+                            tempCell = parents[tempCell];
+                            path.Add(tempCell);
+                        }
                         break;
                     }
                     foreach (var childCell in gameField.GetPassages(currentCell))
                     {
-                        if (visited.Contains(childCell))
+                        if (!visited[childCell])
                         {
+                            parents[childCell] = currentCell;
                             yetToVisit.Enqueue(childCell);
-                            visited.Add(childCell);
+                            visited[childCell] = true;
                         }
                     }
                 }
-                return (length, path);
+                return path;
             }
 
             private GameField gameField;
