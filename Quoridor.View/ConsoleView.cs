@@ -5,10 +5,10 @@ using Quoridor.Model;
 
 namespace Quoridor.View
 {
-    public class ConsoleView
+    public class ConsoleView: IConsoleView
     {
-        private int FieldWidth { get; set; }
-        private int FieldHeight { get; set; }
+        public int FieldWidth { get; set; }
+        public int FieldHeight { get; set; }
         
         public void SetUpGame(QuoridorEvents game, int fieldWidth, int fieldHeight)
         {
@@ -23,19 +23,22 @@ namespace Quoridor.View
             game.CurrentPlayerRequest += OnCurrentPlayerRequest;
         }
 
-        private void PrintGameField(List<Player> playersPosition, List<Wall> walls)
+        public void PrintGameField(List<Player> playersPosition, List<Wall> walls)
         {
-            for (var i = 0; i < FieldWidth; i++)
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Out.WriteLine($"\nWalls left: {playersPosition[1].WallsLeft}");
+            Console.ForegroundColor = ConsoleColor.White;
+            for (var xIndex = 0; xIndex < FieldWidth; xIndex++)
             {
                 Console.Write(" ———");
             }
             Console.WriteLine();
-            for (var i = 0; i < FieldHeight; i++) 
+            for (var yIndex = 0; yIndex < FieldHeight; yIndex++) 
             {
                 Console.Write("|");
-                for (var j = 0; j < FieldWidth; j++)
+                for (var xIndex = 0; xIndex < FieldWidth; xIndex++)
                 {
-                    var player = playersPosition.Find(player => player.Position.X == i && player.Position.Y == j);
+                    var player = playersPosition.Find(player => player.Position.X == xIndex && player.Position.Y == yIndex);
                     if (player != null)
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -44,14 +47,14 @@ namespace Quoridor.View
                     }
                     else
                     {
-                        Console.Out.Write($"{i},{j}");
+                        Console.Out.Write($"{xIndex},{yIndex}");
                     }
 
-                    var wallExists = walls.Any(wall => wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i && cell.Y == j + 1));
+                    var wallExists = walls.Any(wall => wall.isVertical && wall.cells.Exists(cell => cell.Y == yIndex && cell.X == xIndex) && wall.cells.Exists(cell => cell.Y == yIndex && cell.X == xIndex + 1));
                     if (wallExists)
                     {
-                        Console.ForegroundColor = ConsoleColor.Green; 
-                        Console.Write("║"); 
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.Write("║");
                         Console.ForegroundColor = ConsoleColor.White;
                     }
                     else
@@ -61,9 +64,9 @@ namespace Quoridor.View
                 }
                 Console.Out.WriteLine();
 
-                for (var j = 0; j < FieldWidth; j++)
+                for (var xIndex = 0; xIndex < FieldWidth; xIndex++)
                 {
-                    var wallExists = walls.Any(wall => !wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i+1 && cell.Y == j));
+                    var wallExists = walls.Any(wall => !wall.isVertical && wall.cells.Exists(cell => cell.Y == yIndex && cell.X == xIndex) && wall.cells.Exists(cell => cell.Y == yIndex+1 && cell.X == xIndex));
                     if (wallExists)
                     {
                         Console.ForegroundColor = ConsoleColor.Green; 
@@ -77,27 +80,31 @@ namespace Quoridor.View
                 }
                 Console.Out.WriteLine();
             }
+            
+            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.Out.WriteLine($"Walls left: {playersPosition[0].WallsLeft}\n");
+            Console.ForegroundColor = ConsoleColor.White;
         }
-        
-        private void PlayerWon(Player player)
+
+        public void PlayerWon(Player player)
         {
             Console.Out.WriteLine($"Game is over! Player {player.Name} won!\n\nType EXIT to end game, type START to continue playing");
         }
-        
-        private void GameStarted(List<Player> playersPosition, List<Wall> walls)
+
+        public void GameStarted(List<Player> playersPosition, List<Wall> walls)
         {
             Console.Out.WriteLine("The game has begun. Build a wall or make a move");
             PrintGameField(playersPosition, walls);
         }
 
-        private void OnWrongActivity(bool isMove, Player player)
+        public void OnWrongActivity(bool isMove, Player player)
         {
             Console.Out.Write($"Wrong activity for player {player.Name}.");
             Console.Out.Write(
-                isMove ? " The cell is either busy or unreachable.\n" : " The position of wall is either unacceptable or incorrect.\n");
+                isMove ? " The cell is either busy or unreachable.\n" : " The position of wall is either unacceptable or incorrect. \nOr you have built as many walls as possible. Pay attention to wall counter\n");
         }
 
-        private void OnHelpRequest()
+        public void OnHelpRequest()
         {
             Console.Out.WriteLine("To build the wall print \"WALL x1 y1 x2 y2 x3 y3 x4 y4 TRUE (if your wall is vertical) / FALSE (if a wall is horizontal)\nwhere x, y - cell coordinates" +
                                   "\nTo make a move print MOVE x y" +

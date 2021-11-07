@@ -4,6 +4,26 @@ namespace Quoridor.Model
 {
     public class Quoridor
     {
+        public class GameAction
+        {
+            public enum GameActionType
+            {
+                Movement,
+                WallPlacement,
+                Empty
+            }
+
+            public GameAction(GameActionType action, List<Cell> cells)
+            {
+                this.actionType = action;
+                this.cells = cells;
+            }
+
+            public GameActionType actionType;
+            public List<Cell> cells;
+            public bool isVertical = false;
+        }
+
         private readonly Player firstPlayer;
 
         private readonly Player secondPlayer;
@@ -14,6 +34,7 @@ namespace Quoridor.Model
 
         protected Player CurrentPlayer { get; private set; }
         protected Player NextPlayer { get; private set; }
+        private MinimaxTree minimaxTree;
 
         public Player Winner { get; private set; }
 
@@ -24,11 +45,13 @@ namespace Quoridor.Model
             this.firstPlayer = firstPlayer;
             this.secondPlayer = secondPlayer;
             this.targets = targets;
+            this.minimaxTree = new MinimaxTree();
         }
         
         public virtual void StartGame()
         {         
             SetFirstPlayerActive();
+            ResetWallsCounter();
             gameField = new GameField();
 
             Winner = null;
@@ -44,8 +67,14 @@ namespace Quoridor.Model
 
         private void ResetPlayersPosition()
         {
-            firstPlayer.Position = new Cell(0, 4);
-            secondPlayer.Position = new Cell(8, 4);
+            firstPlayer.Position = new Cell(4, 8);
+            secondPlayer.Position = new Cell(4, 0);
+        }
+
+        private void ResetWallsCounter()
+        {
+            firstPlayer.WallsLeft = 10;
+            secondPlayer.WallsLeft = 10;
         }
 
         private void SwitchSides()
@@ -76,12 +105,48 @@ namespace Quoridor.Model
             return false;
         }
 
+        public virtual string MakeBotMove()
+        {
+            var action = minimaxTree.FindTheBestDecision(gameField, CurrentPlayer, NextPlayer, targets);
+
+            if (action.actionType == GameAction.GameActionType.Movement)
+                MovePlayer(action.cells[0]);
+            else
+                TryAddingWall(new Wall(action.cells[0], action.cells[1], action.cells[2], action.cells[3], action.isVertical));
+
+            return GetMessage(action);
+        }
+
+        private string GetMessage(GameAction action)
+        {
+            string message = "";
+            if (action.actionType == GameAction.GameActionType.Movement)
+            {
+                message += "move ";
+                message += (char)(action.cells[0].X + 65);
+                message += (action.cells[0].Y + 1);
+            }
+            else
+            {
+                message += "wall ";
+                List<Cell> cells = action.cells;
+                cells.Sort((Cell left, Cell right) => {
+                    int res = left.X.CompareTo(right.X);
+                    return res != 0 ? res : left.Y.CompareTo(right.Y);
+                });
+                message += (char)(cells[3].X + 82);
+                message += (cells[3].Y);
+                message += action.isVertical ? 'v' : 'h';
+            }
+
+            return message;
+        }
+
         public virtual bool TryAddingWall(Wall wall)
         {
             if (!gameField.AddWall(wall, CurrentPlayer, NextPlayer, targets)) return false;
             SwitchSides();
             return true;
-
         }
 
         private bool IsVictoryAchieved()

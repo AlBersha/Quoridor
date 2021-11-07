@@ -144,6 +144,7 @@ namespace Quoridor.Model
             }
 
             wallsList.Add(wall);
+            firstPlayer.WallsLeft--;
             return true;
         }
 
@@ -172,7 +173,7 @@ namespace Quoridor.Model
             var firstPlayerWayExists = WayExists(firstPlayer.Position, targets[firstPlayer.Name], ref visitedCells);
 
             visitedCells = new List<Cell>() { secondPlayer.Position };
-            var secondPlayerWayExists = WayExists(secondPlayer.Position, targets[firstPlayer.Name], ref visitedCells);
+            var secondPlayerWayExists = WayExists(secondPlayer.Position, targets[secondPlayer.Name], ref visitedCells);
 
             return firstPlayerWayExists && secondPlayerWayExists;
         }

@@ -10,11 +10,27 @@ namespace Quoridor.Model
         public event Action<bool, Player> WrongActivity; 
         public event Action<Player> PlayerWon;
         public event Action HelpRequest;
+        public event Action<String> AIMoveFinished;
         public event Action<Player> CurrentPlayerRequest;
+
+        private bool withAI = false;
 
         public QuoridorEvents(Player firstPlayer, Player secondPlayer, Dictionary<String, List<Cell>> targets) : 
             base(firstPlayer, secondPlayer, targets)
         {
+        }
+
+        public void StartAIGame()
+        {
+            withAI = true;
+            StartGame();
+        }
+
+        public override string MakeBotMove()
+        {
+            var message = base.MakeBotMove();
+            AIMoveFinished?.Invoke(message);
+            return message;
         }
 
         public override void StartGame()
@@ -46,6 +62,11 @@ namespace Quoridor.Model
 
         public override bool TryAddingWall(Wall wall)
         {
+            if (CurrentPlayer.WallsLeft < 1)
+            {
+                WrongActivity?.Invoke(false, CurrentPlayer);
+                return false;
+            }
             if (base.TryAddingWall(wall))
             {
                 FieldUpdated?.Invoke(new List<Player>{CurrentPlayer, NextPlayer}, gameField.Walls);
