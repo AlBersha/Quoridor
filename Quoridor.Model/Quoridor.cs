@@ -8,26 +8,28 @@ namespace Quoridor.Model
         {
             public enum GameActionType
             {
-                Movement,
-                WallPlacement,
+                Move,
+                Jump,
+                PlaceWall,
                 Empty
             }
 
-            public GameAction(GameActionType action, List<Cell> cells)
+            public GameAction(GameActionType action, List<Cell> cells, bool isVertical = false)
             {
                 this.actionType = action;
                 this.cells = cells;
+                this.isVertical = isVertical;
             }
 
             public GameActionType actionType;
             public List<Cell> cells;
-            public bool isVertical = false;
+            public bool isVertical;
         }
 
         private readonly Player firstPlayer;
 
         private readonly Player secondPlayer;
-        
+
         private readonly Dictionary<string, List<Cell>> targets;
 
         protected GameField gameField { get; private set; }
@@ -47,9 +49,9 @@ namespace Quoridor.Model
             this.targets = targets;
             this.minimaxTree = new MinimaxTree();
         }
-        
+
         public virtual void StartGame()
-        {         
+        {
             SetFirstPlayerActive();
             ResetWallsCounter();
             gameField = new GameField();
@@ -85,7 +87,7 @@ namespace Quoridor.Model
 
         private List<Cell> GetPlayerMoves()
         {
-            return gameField.GeneratePossibleMoves(CurrentPlayer, NextPlayer);
+            return gameField.GeneratePossibleMoves(CurrentPlayer.Position, NextPlayer.Position);
         }
 
         public virtual bool MovePlayer(Cell to)
@@ -109,9 +111,10 @@ namespace Quoridor.Model
         {
             var action = minimaxTree.FindTheBestDecision(gameField, CurrentPlayer, NextPlayer, targets);
 
-            if (action.actionType == GameAction.GameActionType.Movement)
+            if (action.actionType == GameAction.GameActionType.Move ||
+                action.actionType == GameAction.GameActionType.Jump)
                 MovePlayer(action.cells[0]);
-            else
+            else if (action.actionType == GameAction.GameActionType.PlaceWall)
                 TryAddingWall(new Wall(action.cells[0], action.cells[1], action.cells[2], action.cells[3], action.isVertical));
 
             return GetMessage(action);
@@ -120,9 +123,10 @@ namespace Quoridor.Model
         private string GetMessage(GameAction action)
         {
             string message = "";
-            if (action.actionType == GameAction.GameActionType.Movement)
+            if (action.actionType == GameAction.GameActionType.Move ||
+                action.actionType == GameAction.GameActionType.Jump)
             {
-                message += "move ";
+                message += action.actionType == GameAction.GameActionType.Move ? "move " : "jump ";
                 message += (char)(action.cells[0].X + 65);
                 message += (action.cells[0].Y + 1);
             }
@@ -130,7 +134,8 @@ namespace Quoridor.Model
             {
                 message += "wall ";
                 List<Cell> cells = action.cells;
-                cells.Sort((Cell left, Cell right) => {
+                cells.Sort((Cell left, Cell right) =>
+                {
                     int res = left.X.CompareTo(right.X);
                     return res != 0 ? res : left.Y.CompareTo(right.Y);
                 });

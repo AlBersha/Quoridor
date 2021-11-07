@@ -5,7 +5,7 @@ using Quoridor.Model;
 
 namespace Quoridor.View
 {
-    public class ConsoleViewV2: IConsoleView
+    public class ConsoleViewV2 : IConsoleView
     {
         public int FieldWidth { get; set; }
         public int FieldHeight { get; set; }
@@ -27,7 +27,7 @@ namespace Quoridor.View
         {
             return;
         }
-        
+
         public void PlayerWon(Player player)
         {
             return;

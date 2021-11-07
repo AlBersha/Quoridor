@@ -8,6 +8,12 @@
             Y = y;
         }
 
+        public Cell(Cell from)
+        {
+            X = from.X;
+            Y = from.Y;
+        }
+
         public int X { get; private set; }
         public int Y { get; private set; }
 
