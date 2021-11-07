@@ -28,17 +28,17 @@ namespace Quoridor.View
             Console.ForegroundColor = ConsoleColor.Yellow;
             Console.Out.WriteLine($"\nWalls left: {playersPosition[1].WallsLeft}");
             Console.ForegroundColor = ConsoleColor.White;
-            for (var i = 0; i < FieldWidth; i++)
+            for (var xIndex = 0; xIndex < FieldWidth; xIndex++)
             {
                 Console.Write(" ———");
             }
             Console.WriteLine();
-            for (var i = 0; i < FieldHeight; i++) 
+            for (var yIndex = 0; yIndex < FieldHeight; yIndex++) 
             {
                 Console.Write("|");
-                for (var j = 0; j < FieldWidth; j++)
+                for (var xIndex = 0; xIndex < FieldWidth; xIndex++)
                 {
-                    var player = playersPosition.Find(player => player.Position.X == i && player.Position.Y == j);
+                    var player = playersPosition.Find(player => player.Position.X == xIndex && player.Position.Y == yIndex);
                     if (player != null)
                     {
                         Console.ForegroundColor = ConsoleColor.Yellow;
@@ -47,14 +47,14 @@ namespace Quoridor.View
                     }
                     else
                     {
-                        Console.Out.Write($"{i},{j}");
+                        Console.Out.Write($"{xIndex},{yIndex}");
                     }
 
-                    var wallExists = walls.Any(wall => wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i && cell.Y == j + 1));
+                    var wallExists = walls.Any(wall => wall.isVertical && wall.cells.Exists(cell => cell.Y == yIndex && cell.X == xIndex) && wall.cells.Exists(cell => cell.Y == yIndex && cell.X == xIndex + 1));
                     if (wallExists)
                     {
-                        Console.ForegroundColor = ConsoleColor.Green; 
-                        Console.Write("║"); 
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.Write("║");
                         Console.ForegroundColor = ConsoleColor.White;
                     }
                     else
@@ -64,9 +64,9 @@ namespace Quoridor.View
                 }
                 Console.Out.WriteLine();
 
-                for (var j = 0; j < FieldWidth; j++)
+                for (var xIndex = 0; xIndex < FieldWidth; xIndex++)
                 {
-                    var wallExists = walls.Any(wall => !wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i+1 && cell.Y == j));
+                    var wallExists = walls.Any(wall => !wall.isVertical && wall.cells.Exists(cell => cell.Y == yIndex && cell.X == xIndex) && wall.cells.Exists(cell => cell.Y == yIndex+1 && cell.X == xIndex));
                     if (wallExists)
                     {
                         Console.ForegroundColor = ConsoleColor.Green; 

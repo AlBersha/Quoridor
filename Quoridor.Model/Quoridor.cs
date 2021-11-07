@@ -64,8 +64,8 @@ namespace Quoridor.Model
 
         private void ResetPlayersPosition()
         {
-            firstPlayer.Position = new Cell(0, 4);
-            secondPlayer.Position = new Cell(8, 4);
+            firstPlayer.Position = new Cell(4, 0);
+            secondPlayer.Position = new Cell(4, 8);
         }
 
         private void ResetWallsCounter()
