@@ -71,8 +71,7 @@ namespace Quoridor.Model
 
             private List<Node> TryPlacingWallsCloseToEnemy()
             {
-                // TODO add the check for the amount of walls left being 2 or more
-                const bool isWallsCountAbove2 = false;
+                bool isWallsCountAbove2 = player.WallsLeft > 2;
                 bool bottomToTopMovement = enemy.Position.Y - targets[enemy.Name][0].Y < 0;
                 bool areVerticalWallsPossible = Math.Abs(enemy.Position.Y - targets[enemy.Name][0].Y) > 1;
                 bool areFarVerticalWallsPossible = Math.Abs(enemy.Position.Y - targets[enemy.Name][0].Y) > 2;
@@ -123,11 +122,9 @@ namespace Quoridor.Model
 
             private void GenerateBestPaths()
             {
-                List<Cell> visitedCells = new List<Cell>();
                 bestPathPlayer = GetBestPath(player.Position, targets[player.Name]);
                 bestPathLengthPlayer = bestPathPlayer.Count();
 
-                visitedCells.Clear();
                 bestPathEnemy = GetBestPath(enemy.Position, targets[enemy.Name]);
                 bestPathLengthEnemy = bestPathEnemy.Count();
             }
@@ -143,7 +140,7 @@ namespace Quoridor.Model
                     nextPlayerState.Position = cellToGo;
                     children.Add(new Node(gameField, enemy, nextPlayerState, targets, depth + 1, false, bestPathLengthEnemy, bestPathEnemy, bestPathLengthPlayer, bestPathPlayer, new Quoridor.GameAction(Quoridor.GameAction.GameActionType.Movement, new List<Cell> { cellToGo })));
                 }
-                else
+                else if (player.WallsLeft > 0)
                     children.InsertRange(0, TryPlacingWallsCloseToEnemy());
 
                 return children;
