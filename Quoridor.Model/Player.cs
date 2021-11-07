@@ -13,5 +13,12 @@ namespace Quoridor.Model
             Name = name;
             Position = position;
         }
+
+        public Player(Player from)
+        {
+            Name = from.Name;
+            Position = new Cell(from.Position);
+            WallsLeft = from.WallsLeft;
+        }
     }
 }

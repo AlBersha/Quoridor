@@ -18,11 +18,11 @@ namespace Quoridor.Input
                 switch (split[0].ToLower())
                 {
                     case "white":
-                        game.StartAIGame();
+                        game.StartGame();
                         game.MakeBotMove();
                         break;
                     case "black":
-                        game.StartAIGame();
+                        game.StartGame();
                         break;
                     case "move":
                     case "jump":
@@ -66,7 +66,7 @@ namespace Quoridor.Input
         {
             (int minXIndex, int maxXIndex) = GetWallMinMaxIndicesFromLetter(wallArgument[0]);
             (int minYIndex, int maxYIndex) = GetMinMaxIndicesFromNumber(int.Parse(wallArgument[1].ToString()));
-            bool isVertical = wallArgument[2] == 'h';
+            bool isVertical = wallArgument[2] == 'v';
 
             return new Wall(
                 new Cell(minXIndex, minYIndex),

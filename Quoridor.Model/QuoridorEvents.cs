@@ -13,17 +13,9 @@ namespace Quoridor.Model
         public event Action<String> AIMoveFinished;
         public event Action<Player> CurrentPlayerRequest;
 
-        private bool withAI = false;
-
         public QuoridorEvents(Player firstPlayer, Player secondPlayer, Dictionary<String, List<Cell>> targets) : 
             base(firstPlayer, secondPlayer, targets)
         {
-        }
-
-        public void StartAIGame()
-        {
-            withAI = true;
-            StartGame();
         }
 
         public override string MakeBotMove()

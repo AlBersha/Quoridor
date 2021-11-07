@@ -8,6 +8,12 @@ namespace Quoridor.Model
 
     public struct Wall
     {
+        public Wall(Wall from)
+        {
+            cells = new List<Cell>(from.cells);
+            isVertical = from.isVertical;
+        }
+
         public Wall(Cell c1, Cell c2, Cell c3, Cell c4, bool isVertical)
         {
             cells = new List<Cell>();

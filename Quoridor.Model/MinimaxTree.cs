@@ -8,7 +8,7 @@ namespace Quoridor.Model
     {
         class Node
         {
-            public Node(GameField gameField, Player player, Player enemy, Dictionary<string, List<Cell>> targets, int depth, bool recalculatePaths, int bestPathLengthPlayer, List<Cell> bestPathPlayer, int bestPathLengthEnemy, List<Cell> bestPathEnemy, Quoridor.GameAction gameAction)
+            public Node(GameField gameField, Player player, Player enemy, Dictionary<string, List<Cell>> targets, int depth, Quoridor.GameAction gameAction, bool isLeaf = false)
             {
                 this.gameField = gameField;
                 this.player = player;
@@ -16,19 +16,11 @@ namespace Quoridor.Model
                 this.depth = depth;
                 this.targets = targets;
                 this.gameAction = gameAction;
+                this.isLeaf = isLeaf;
 
-                if (depth == 0 || recalculatePaths)
-                    GenerateBestPaths();
-                else
-                {
-                    this.bestPathLengthPlayer = bestPathLengthPlayer;
-                    this.bestPathPlayer = bestPathPlayer;
+                GenerateBestPaths();
 
-                    this.bestPathLengthEnemy = bestPathLengthEnemy;
-                    this.bestPathEnemy = bestPathEnemy;
-                }
-
-                if (this.depth != maxDepth && this.bestPathLengthPlayer != 0 && this.bestPathLengthEnemy != 0)
+                if (this.depth != maxDepth && this.bestPathLengthPlayer != 0 && this.bestPathLengthEnemy != 0 && !isLeaf)
                 {
                     children = GenerateChildren();
 
@@ -46,16 +38,17 @@ namespace Quoridor.Model
 
             private float GetCurrentEvaluation()
             {
-                if (depth % 2 != 0 && bestPathLengthEnemy == 0)
+                if (depth % 2 == 0 && bestPathLengthPlayer == 0)
                     return -100 + this.depth;
-                else if (depth % 2 == 0 && bestPathLengthEnemy == 0)
+                else if (depth % 2 != 0 && bestPathLengthPlayer == 0)
                     return 100 - this.depth;
                 else
                     return bestPathLengthEnemy / bestPathLengthPlayer;
             }
 
-            private void TryAddingWallPlacingNode(int leftXPosition, int bottomYPosition, int topYPosition, bool isVerticalWall, ref GameField changedGameField, ref List<Node> children)
+            private bool TryAddingWallPlacingNode(int leftXPosition, int bottomYPosition, int topYPosition, bool isVerticalWall, ref List<Node> children)
             {
+                GameField changedGameField = new GameField(gameField);
                 Wall wall = new Wall(
                         new Cell(leftXPosition, topYPosition),
                         new Cell(leftXPosition, bottomYPosition),
@@ -63,59 +56,78 @@ namespace Quoridor.Model
                         new Cell(leftXPosition + 1, bottomYPosition),
                         isVerticalWall);
 
-                if (changedGameField.AddWall(wall, player, enemy, targets))
-                    children.Add(new Node(changedGameField, enemy, player, targets, depth + 1, true, bestPathLengthEnemy, bestPathEnemy, bestPathLengthPlayer, bestPathPlayer, new Quoridor.GameAction(Quoridor.GameAction.GameActionType.WallPlacement, wall.cells)));
+                Player changedPlayer = new Player(player);
 
-                changedGameField = gameField;
+                if (changedGameField.AddWall(wall, changedPlayer, enemy, targets))
+                {
+                    children.Add(new Node(changedGameField, enemy, changedPlayer, targets, depth + 1, new Quoridor.GameAction(Quoridor.GameAction.GameActionType.PlaceWall, wall.cells, wall.isVertical)));
+                    return true;
+                }
+                return false;
+            }
+
+            private void TryAddingHorizontalWalls(int lowerWallIndexY, int upperWallIndexY, ref List<Node> resulting_children, bool topToBottomMovement)
+            {
+                int distanceToTargets = Math.Abs(enemy.Position.Y - targets[enemy.Name][0].Y);
+                bool areVerticalWallsPossible = distanceToTargets >= 1;
+                if (!areVerticalWallsPossible)
+                    return;
+
+                // a horizontal wall right in front of the enemy going "left"
+                if (enemy.Position.X > 0)
+                    TryAddingWallPlacingNode(enemy.Position.X - 1, lowerWallIndexY, upperWallIndexY, false, ref resulting_children);
+
+                // a horizontal wall right in front of the enemy going "right"
+                if (enemy.Position.X < GameField.fieldSize - 1)
+                    TryAddingWallPlacingNode(enemy.Position.X, lowerWallIndexY, upperWallIndexY, false, ref resulting_children);
+
+                bool isHighRisk = distanceToTargets < GameField.fieldSize / 3;
+                if (!isHighRisk)
+                    return;
+
+                int minTargetWallYIndex = topToBottomMovement ? enemy.Position.Y - 1 : enemy.Position.Y + 1;
+                int maxTargetWallYIndex = targets[enemy.Name][0].Y;
+
+                if (!gameField.WallExists(enemy.Position, topToBottomMovement) && enemy.Position.X < GameField.fieldSize - 1)
+                    TryAddingWallPlacingNode(enemy.Position.X, minTargetWallYIndex, maxTargetWallYIndex, false, ref resulting_children);
+
+                if (!gameField.WallExists(enemy.Position, topToBottomMovement) && enemy.Position.X > 0)
+                    TryAddingWallPlacingNode(enemy.Position.X - 1, minTargetWallYIndex, maxTargetWallYIndex, false, ref resulting_children);
+
+                if (!gameField.WallExists(enemy.Position, topToBottomMovement) && enemy.Position.X < GameField.fieldSize - 2)
+                    TryAddingWallPlacingNode(enemy.Position.X + 1, minTargetWallYIndex, maxTargetWallYIndex, false, ref resulting_children);
+
+                if (!gameField.WallExists(enemy.Position, topToBottomMovement) && enemy.Position.X > 1)
+                    TryAddingWallPlacingNode(enemy.Position.X - 2, minTargetWallYIndex, maxTargetWallYIndex, false, ref resulting_children);
+            }
+
+            private void TryAddingVerticalWalls(int lowerWallIndexY, int upperWallIndexY, ref List<Node> resulting_children, bool topToBottomMovement)
+            {
+                bool areVerticalWallsPossible = Math.Abs(enemy.Position.Y - targets[enemy.Name][0].Y) > 1;
+                bool isWallInFrontOfEnemy = gameField.WallExists(enemy.Position, topToBottomMovement);
+                if (!areVerticalWallsPossible || !isWallInFrontOfEnemy || enemy.Position.Y == 0 || enemy.Position.Y == 8)
+                    return;
+
+                // a vertical wall to the left of the enemy going "upwards"
+                if (enemy.Position.X > 0)
+                    TryAddingWallPlacingNode(enemy.Position.X - 1, lowerWallIndexY, upperWallIndexY, true, ref resulting_children);
+
+                // a vertical wall to the right of the enemy going "upwards"
+                if (enemy.Position.X < GameField.fieldSize - 1)
+                    TryAddingWallPlacingNode(enemy.Position.X, lowerWallIndexY, upperWallIndexY, true, ref resulting_children);
             }
 
             private List<Node> TryPlacingWallsCloseToEnemy()
             {
-                bool isWallsCountAbove2 = player.WallsLeft > 2;
-                bool bottomToTopMovement = enemy.Position.Y - targets[enemy.Name][0].Y < 0;
-                bool areVerticalWallsPossible = Math.Abs(enemy.Position.Y - targets[enemy.Name][0].Y) > 1;
-                bool areFarVerticalWallsPossible = Math.Abs(enemy.Position.Y - targets[enemy.Name][0].Y) > 2;
+                bool isWallsCountAbove5 = player.WallsLeft > 5;
+                bool topToBottomEnemyMovement = enemy.Position.Y - targets[enemy.Name][0].Y < 0;
 
                 List<Node> resulting_children = new List<Node>();
-                GameField changedGameField = gameField;
 
-                int lowerWallIndexY = enemy.Position.Y;
-                int upperWallIndexY = !bottomToTopMovement ? enemy.Position.Y - 1 : enemy.Position.Y + 1;
+                if (isWallsCountAbove5)
+                    TryAddingVerticalWalls(topToBottomEnemyMovement ? enemy.Position.Y - 1 : enemy.Position.Y + 1, enemy.Position.Y, ref resulting_children, topToBottomEnemyMovement);
 
-                // a vertical wall to the left of the player going "upwards"
-                if (enemy.Position.X > 0 && areVerticalWallsPossible && isWallsCountAbove2)
-                    TryAddingWallPlacingNode(enemy.Position.X - 1, lowerWallIndexY, upperWallIndexY, true, ref changedGameField, ref resulting_children);
-
-                // a vertical wall to the far left of the player going "upwards"
-                if (enemy.Position.X > 1 && areVerticalWallsPossible && isWallsCountAbove2)
-                    TryAddingWallPlacingNode(enemy.Position.X - 2, lowerWallIndexY, upperWallIndexY, true, ref changedGameField, ref resulting_children);
-
-                // a vertical wall to the right of the player going "upwards"
-                if (enemy.Position.X < GameField.fieldSize - 1 && areVerticalWallsPossible && isWallsCountAbove2)
-                    TryAddingWallPlacingNode(enemy.Position.X, lowerWallIndexY, upperWallIndexY, true, ref changedGameField, ref resulting_children);
-
-                // a vertical wall to the far right of the player going "upwards"
-                if (enemy.Position.X < GameField.fieldSize - 2 && areVerticalWallsPossible && isWallsCountAbove2)
-                    TryAddingWallPlacingNode(enemy.Position.X, lowerWallIndexY, upperWallIndexY, true, ref changedGameField, ref resulting_children);
-
-                // a horizontal wall right in front of the player going "left"
-                if (enemy.Position.X < GameField.fieldSize - 1 && areVerticalWallsPossible)
-                    TryAddingWallPlacingNode(enemy.Position.X - 1, lowerWallIndexY, upperWallIndexY, false, ref changedGameField, ref resulting_children);
-
-                // a horizontal wall right in front of the player going "right"
-                if (enemy.Position.X > 0 && areVerticalWallsPossible)
-                    TryAddingWallPlacingNode(enemy.Position.X, lowerWallIndexY, upperWallIndexY, false, ref changedGameField, ref resulting_children);
-
-                int farLowerWallIndexY = upperWallIndexY;
-                int farUpperWallIndexY = !bottomToTopMovement ? upperWallIndexY - 1 : upperWallIndexY + 1;
-
-                // a horizontal wall in 1 cell in front of the player going "left"
-                if (enemy.Position.X < GameField.fieldSize - 1 && areFarVerticalWallsPossible)
-                    TryAddingWallPlacingNode(enemy.Position.X - 1, farLowerWallIndexY, farUpperWallIndexY, false, ref changedGameField, ref resulting_children);
-
-                // a horizontal wall in 1 cell in front of the player going "right"
-                if (enemy.Position.X > 0 && areFarVerticalWallsPossible)
-                    TryAddingWallPlacingNode(enemy.Position.X, farLowerWallIndexY, farUpperWallIndexY, false, ref changedGameField, ref resulting_children);
+                TryAddingHorizontalWalls(enemy.Position.Y, !topToBottomEnemyMovement ? enemy.Position.Y - 1 : enemy.Position.Y + 1, ref resulting_children, topToBottomEnemyMovement);
 
                 return resulting_children;
             }
@@ -133,40 +145,46 @@ namespace Quoridor.Model
             {
                 List<Node> children = new List<Node>();
 
-                Cell cellToGo = bestPathPlayer[bestPathPlayer.FindIndex(cell => cell == player.Position) + 1];
-                if (IsMovingTheBestChoice() && gameField.GeneratePossibleMoves(player, enemy).Contains(cellToGo))
+                bool isWinningNodeFound = bestPathPlayer.Count() == 1;
+
+                Cell cellToGo = bestPathPlayer.Contains(player.Position)
+                    ? bestPathPlayer[bestPathPlayer.FindIndex(cell => cell == player.Position) + 1]
+                    : bestPathPlayer[0];
+
+                if (gameField.GeneratePossibleMoves(player.Position, enemy.Position).Contains(cellToGo))
                 {
-                    Player nextPlayerState = player;
+                    Player nextPlayerState = new Player(player);
                     nextPlayerState.Position = cellToGo;
-                    children.Add(new Node(gameField, enemy, nextPlayerState, targets, depth + 1, false, bestPathLengthEnemy, bestPathEnemy, bestPathLengthPlayer, bestPathPlayer, new Quoridor.GameAction(Quoridor.GameAction.GameActionType.Movement, new List<Cell> { cellToGo })));
+                    Quoridor.GameAction newGameAction = new Quoridor.GameAction(gameField.GetPassages(player.Position).Contains(cellToGo) ? Quoridor.GameAction.GameActionType.Move : Quoridor.GameAction.GameActionType.Jump, new List<Cell> { cellToGo });
+
+                    children.Add(new Node(gameField, enemy, nextPlayerState, targets, depth + 1, newGameAction, isWinningNodeFound));
                 }
-                else if (player.WallsLeft > 0)
+
+                if (player.WallsLeft > 0 && bestPathLengthPlayer < bestPathLengthEnemy + 2)
                     children.InsertRange(0, TryPlacingWallsCloseToEnemy());
 
                 return children;
             }
 
-            private bool IsMovingTheBestChoice()
-            {
-                return bestPathLengthPlayer < bestPathLengthEnemy;
-            }
-
             private List<Cell> GetBestPath(Cell from, List<Cell> to)
             {
                 List<Cell> path = new List<Cell>();
-                
+
+                if (to.Contains(from))
+                    return path;
+
                 Dictionary<Cell, bool> visited = new Dictionary<Cell, bool>();
                 for (int indexX = 0; indexX < GameField.fieldSize; indexX++)
                     for (int indexY = 0; indexY < GameField.fieldSize; indexY++)
                         visited[new Cell(indexX, indexY)] = false;
-                
+
                 Queue<Cell> yetToVisit = new Queue<Cell>();
                 Dictionary<Cell, Cell> parents = new Dictionary<Cell, Cell>();
 
                 Cell currentCell;
                 yetToVisit.Enqueue(from);
                 visited[from] = true;
-                
+
                 while (yetToVisit.Count() > 0)
                 {
                     currentCell = yetToVisit.Dequeue();
@@ -182,7 +200,7 @@ namespace Quoridor.Model
                         }
                         break;
                     }
-                    foreach (var childCell in gameField.GetPassages(currentCell))
+                    foreach (var childCell in gameField.GeneratePossibleMoves(currentCell, enemy.Position))
                     {
                         if (!visited[childCell])
                         {
@@ -192,6 +210,8 @@ namespace Quoridor.Model
                         }
                     }
                 }
+
+                path.Reverse();
                 return path;
             }
 
@@ -203,7 +223,7 @@ namespace Quoridor.Model
             public float value;
 
             public int depth;
-            static int maxDepth = 5;
+            static int maxDepth = 13;
 
             public bool isLeaf;
 
@@ -221,37 +241,41 @@ namespace Quoridor.Model
 
         public Quoridor.GameAction FindTheBestDecision(GameField gameField, Player player, Player enemy, Dictionary<string, List<Cell>> targets)
         {
-            root = new Node(gameField, player, enemy, targets, 0, true, 0, new List<Cell>(), 0, new List<Cell>(), new Quoridor.GameAction(Quoridor.GameAction.GameActionType.Empty, new List<Cell>()));
+            root = new Node(new GameField(gameField), new Player(player), new Player(enemy), targets, 0, new Quoridor.GameAction(Quoridor.GameAction.GameActionType.Empty, new List<Cell>()));
 
-            Node resultingDecision = GetTheBestNode(root);
-            return resultingDecision.gameAction;
+            (float nodeValue, Node bestNode) = GetTheBestNodeAndValue(root, true);
+            return bestNode.gameAction;
         }
 
-        private Node GetTheBestNode(Node currentNode)
+        (float, Node) GetTheBestNodeAndValue(Node node, bool isMinValuePreferrable)
         {
-            if (currentNode.isLeaf)
-                return currentNode;
-
-            bool isMinValuePreferrable = currentNode.depth % 2 == 0;
+            if (node.isLeaf)
+                return (node.value, node);
 
             Node bestNode = null, tempNode;
+            float bestNodeValue = 0, tempNodeValue = 0;
             bool isFirstIteration = true;
 
-            foreach (Node childNode in currentNode.children)
+            foreach (Node childNode in node.children)
             {
                 if (isFirstIteration)
                 {
-                    bestNode = GetTheBestNode(childNode);
+                    bestNode = childNode;
+                    (bestNodeValue, _) = GetTheBestNodeAndValue(bestNode, !isMinValuePreferrable);
                     isFirstIteration = false;
                     continue;
                 }
 
-                tempNode = GetTheBestNode(childNode);
-                if (isMinValuePreferrable ? tempNode.value < bestNode.value : tempNode.value > bestNode.value)
+                tempNode = childNode;
+                (tempNodeValue, _) = GetTheBestNodeAndValue(tempNode, !isMinValuePreferrable);
+                if (isMinValuePreferrable ? tempNodeValue < bestNodeValue : tempNodeValue > bestNodeValue)
+                {
                     bestNode = tempNode;
+                    bestNodeValue = tempNodeValue;
+                }
             }
 
-            return bestNode;
+            return (bestNodeValue, bestNode);
         }
 
         Node root;
