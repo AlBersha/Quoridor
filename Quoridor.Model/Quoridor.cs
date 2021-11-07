@@ -4,6 +4,25 @@ namespace Quoridor.Model
 {
     public class Quoridor
     {
+        public class GameAction
+        {
+            public enum GameActionType
+            {
+                Movement,
+                WallPlacement,
+                Empty
+            }
+
+            public GameAction(GameActionType action, List<Cell> cells)
+            {
+                this.actionType = action;
+                this.cells = cells;
+            }
+
+            GameActionType actionType { get; }
+            List<Cell> cells;
+        }
+
         private readonly Player firstPlayer;
 
         private readonly Player secondPlayer;
