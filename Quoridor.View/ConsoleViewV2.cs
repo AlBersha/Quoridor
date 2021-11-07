@@ -12,128 +12,42 @@ namespace Quoridor.View
 
         public void SetUpGame(QuoridorEvents game, int fieldWidth, int fieldHeight)
         {
-            throw new NotImplementedException();
+            FieldWidth = fieldWidth;
+            FieldHeight = fieldHeight;
+
+            game.AIMoveFinished += PrintMessage;
         }
 
-        public ConsoleViewV2(int width, int height)
+        public void PrintMessage(string message)
         {
-            FieldWidth = width;
-            FieldHeight = height;
+            Console.Out.WriteLine(message);
         }
 
         public void PrintGameField(List<Player> playersPosition, List<Wall> walls)
         {
-            var A = 65;
-            Console.Out.Write("   ");
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            for (var i = 0; i < FieldWidth; i++)
-            {
-                Console.Write($"  {(char)A} ");
-                A++;
-            }
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.Out.WriteLine();
-            Console.Out.Write("   ");
-            for (var i = 0; i < FieldWidth; i++)
-            {
-                Console.Write(" ———");
-            }
-            Console.WriteLine();
-            for (var i = 0; i < FieldHeight + 1; i++) 
-            {
-                if (i == FieldHeight)
-                {
-                    var S = 83;
-                    Console.ForegroundColor = ConsoleColor.Cyan;
-                    Console.Out.Write("    ");
-                    for (var j = 1; j < FieldWidth; j++)
-                    {
-                        Console.Out.Write($"   {(char)S}");
-                        S++;
-                    }
-                    Console.ForegroundColor = ConsoleColor.White;
-                    break;
-                }
-                
-                Console.ForegroundColor = ConsoleColor.Magenta;
-                Console.Out.Write($" {i} ");
-                Console.ForegroundColor = ConsoleColor.White;
-                Console.Write("|");
-                for (var j = 0; j < FieldWidth; j++)
-                {
-                    var player = playersPosition.Find(player => player.Position.X == i && player.Position.Y == j);
-                    if (player != null)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.Out.Write($" {player.Name} ");
-                        Console.ForegroundColor = ConsoleColor.White;
-                    }
-                    else
-                    {
-                        Console.Out.Write($"   ");
-                    }
-
-                    var wallExists = walls.Any(wall => wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i && cell.Y == j + 1));
-                    if (wallExists)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Green; 
-                        Console.Write("║"); 
-                        Console.ForegroundColor = ConsoleColor.White;
-                    }
-                    else
-                    {
-                        Console.Write("|");
-                    }
-                }
-                Console.Out.WriteLine();
-
-                Console.Out.Write("   ");
-                for (var j = 0; j < FieldWidth + 1; j++)
-                {
-                    if (j == FieldWidth)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Cyan;
-                        Console.Out.Write($"  {i+1}");
-                        Console.ForegroundColor = ConsoleColor.White;
-
-                        break;
-                    }
-                    var wallExists = walls.Any(wall => !wall.isVertical && wall.cells.Exists(cell => cell.X == i && cell.Y == j) && wall.cells.Exists(cell => cell.X == i+1 && cell.Y == j));
-                    if (wallExists)
-                    {
-                        Console.ForegroundColor = ConsoleColor.Green; 
-                        Console.Write(" ═══"); 
-                        Console.ForegroundColor = ConsoleColor.White;
-                    }
-                    else
-                    {
-                        Console.Out.Write(" ———");
-                    }
-
-                    
-                }
-                Console.Out.WriteLine();
-            }
+            return;
         }
         
         public void PlayerWon(Player player)
         {
-            throw new NotImplementedException();
+            return;
         }
 
         public void GameStarted(List<Player> playersPosition, List<Wall> walls)
         {
-            throw new NotImplementedException();
+            return;
         }
 
         public void OnHelpRequest()
         {
-            throw new NotImplementedException();
+            return;
         }
 
         public void OnWrongActivity(bool isMove, Player player)
         {
-            throw new NotImplementedException();
+            string message = $"Wrong activity for player {player.Name}."
+                + (isMove ? " The cell is either busy or unreachable.\n" : " The position of wall is either unacceptable or incorrect. \nOr you have built as many walls as possible. Pay attention to wall counter\n");
+            throw new Exception(message);
         }
     }
 }

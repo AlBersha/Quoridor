@@ -19,8 +19,9 @@ namespace Quoridor.Model
                 this.cells = cells;
             }
 
-            GameActionType actionType { get; }
-            List<Cell> cells;
+            public GameActionType actionType;
+            public List<Cell> cells;
+            public bool isVertical = false;
         }
 
         private readonly Player firstPlayer;
@@ -33,6 +34,7 @@ namespace Quoridor.Model
 
         protected Player CurrentPlayer { get; private set; }
         protected Player NextPlayer { get; private set; }
+        private MinimaxTree minimaxTree;
 
         public Player Winner { get; private set; }
 
@@ -43,6 +45,7 @@ namespace Quoridor.Model
             this.firstPlayer = firstPlayer;
             this.secondPlayer = secondPlayer;
             this.targets = targets;
+            this.minimaxTree = new MinimaxTree();
         }
         
         public virtual void StartGame()
@@ -64,8 +67,8 @@ namespace Quoridor.Model
 
         private void ResetPlayersPosition()
         {
-            firstPlayer.Position = new Cell(4, 0);
-            secondPlayer.Position = new Cell(4, 8);
+            firstPlayer.Position = new Cell(4, 8);
+            secondPlayer.Position = new Cell(4, 0);
         }
 
         private void ResetWallsCounter()
@@ -100,6 +103,39 @@ namespace Quoridor.Model
                 return true;
             }
             return false;
+        }
+
+        public virtual string MakeBotMove()
+        {
+            var action = minimaxTree.FindTheBestDecision(gameField, CurrentPlayer, NextPlayer, targets);
+
+            if (action.actionType == GameAction.GameActionType.Movement)
+                MovePlayer(action.cells[0]);
+            else
+                TryAddingWall(new Wall(action.cells[0], action.cells[1], action.cells[2], action.cells[3], action.isVertical));
+
+            return GetMessage(action);
+        }
+
+        private string GetMessage(GameAction action)
+        {
+            string message = "";
+            if (action.actionType == GameAction.GameActionType.Movement)
+            {
+                message += "move ";
+                message += (char)(action.cells[0].X + 65);
+                message += (action.cells[0].Y + 1);
+            }
+            else
+            {
+                message += "wall ";
+                List<Cell> cells = action.cells;
+                cells.Sort();
+                message += (cells[3].X + 82);
+                message += (cells[3].Y);
+            }
+
+            return message;
         }
 
         public virtual bool TryAddingWall(Wall wall)

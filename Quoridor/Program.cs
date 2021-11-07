@@ -29,14 +29,6 @@ namespace Quoridor
 
             var input = new ConsoleInput();
             input.ProcessInput(quoridor);
-
-            //Player playerA = new Player("A", new Cell(4, 0));
-            //Player playerB = new Player("B", new Cell(4, 8));
-
-            //GameField gameField = new GameField();
-
-            //MinimaxTree minimaxTree = new MinimaxTree();
-            //var gameAction = minimaxTree.FindTheBestDecision(gameField, playerA, playerB, targets);
         }
     }
 }

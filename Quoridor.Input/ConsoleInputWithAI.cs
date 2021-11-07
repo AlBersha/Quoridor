@@ -19,31 +19,62 @@ namespace Quoridor.Input
 
                 switch (split[0].ToLower())
                 {
-                    case "start":
-                        
-                        break;
                     case "white":
+                        game.StartAIGame();
+                        game.MakeBotMove();
+                        break;
                     case "black":
-                        
+                        game.StartAIGame();
                         break;
                     case "move":
-                        
-                        break;
                     case "jump":
-                        
+                        var moveTo = ParseMoveArgument(split[1]);
+                        game.MovePlayer(moveTo);
                         break;
                     case "wall":
-                        
-                        break;
-                    case "h":
-                    case "help":
-                        break;
-                    case "exit":
-                        Console.WriteLine("Thanks for playing wonderful Quoridor!");
-                        continuePlay = false;
+                        var wall = ParseWallPlacingArgument(split[1]);
+                        game.TryAddingWall(wall);
                         break;
                 }
             }
+        }
+
+        private int GetMoveIndexFromLetter(char letter)
+        {
+            return ((int)letter) - 65;
+        }
+        
+        private (int, int) GetWallMinMaxIndicesFromLetter(char letter)
+        {
+            return GetMinMaxIndicesFromNumber(((int)letter) - 82);
+        }
+        
+        private (int, int) GetMinMaxIndicesFromNumber(int number)
+        {
+            return (number - 1, number);
+        }
+
+        private Cell ParseMoveArgument(string moveArgument)
+        {
+            int xIndex = GetMoveIndexFromLetter(moveArgument[0]);
+            int yIndex = int.Parse(moveArgument[1].ToString()) - 1;
+
+            return new Cell(xIndex, yIndex);
+        }
+
+        private Wall ParseWallPlacingArgument(string wallArgument)
+        {
+            (int minXIndex, int maxXIndex) = GetWallMinMaxIndicesFromLetter(wallArgument[0]);
+            (int minYIndex, int maxYIndex) = GetMinMaxIndicesFromNumber(int.Parse(wallArgument[1].ToString()));
+            bool isVertical = wallArgument[2] == 'h';
+
+            return new Wall(
+                new Cell(minXIndex, minYIndex),
+                new Cell(minXIndex, maxYIndex),
+                new Cell(maxXIndex, minYIndex),
+                new Cell(maxXIndex, maxYIndex),
+                isVertical
+                );
         }
     }
 }
