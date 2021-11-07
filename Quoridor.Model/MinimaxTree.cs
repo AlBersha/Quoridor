@@ -124,10 +124,10 @@ namespace Quoridor.Model
             private void GenerateBestPaths()
             {
                 List<Cell> visitedCells = new List<Cell>();
-                (bestPathLengthPlayer, bestPathPlayer) = GetBestPath(player.Position, targets[player.Name], 0, ref visitedCells, new List<Cell>());
+                (bestPathLengthPlayer, bestPathPlayer) = GetBestPath(player.Position, targets[player.Name]);
 
                 visitedCells.Clear();
-                (bestPathLengthEnemy, bestPathEnemy) = GetBestPath(enemy.Position, targets[enemy.Name], 0, ref visitedCells, new List<Cell>());
+                (bestPathLengthEnemy, bestPathEnemy) = GetBestPath(enemy.Position, targets[enemy.Name]);
             }
 
             private List<Node> GenerateChildren()
@@ -152,30 +152,35 @@ namespace Quoridor.Model
                 return bestPathLengthPlayer < bestPathLengthEnemy;
             }
 
-            private (int, List<Cell>) GetBestPath(Cell from, List<Cell> to, int length, ref List<Cell> visitedCells, List<Cell> path)
+            private (int, List<Cell>) GetBestPath(Cell from, List<Cell> to)
             {
-                foreach (var cell in gameField.GetPassages(from))
-                    if (to.Contains(cell))
-                        return (length, path);
+                int length = 0;
+                List<Cell> path = new List<Cell>();
+                List<Cell> visited = new List<Cell>();
+                Queue<Cell> yetToVisit = new Queue<Cell>();
+                Cell currentCell;
 
-                int shortest_length = 100;
-                List<Cell> shortest_path = new List<Cell>();
-
-                foreach (var cell in gameField.GetPassages(from))
+                yetToVisit.Enqueue(from);
+                visited.Add(from);
+                
+                while (yetToVisit.Count() > 0)
                 {
-                    if (!visitedCells.Contains(cell))
+                    length++;
+                    currentCell = yetToVisit.Dequeue();
+                    if (to.Contains(currentCell))
                     {
-                        visitedCells.Add(cell);
-                        (int found_length, List<Cell> found_path) = GetBestPath(cell, to, length + 1, ref visitedCells, path);
-                        if (found_length < shortest_length)
+                        break;
+                    }
+                    foreach (var childCell in gameField.GetPassages(currentCell))
+                    {
+                        if (visited.Contains(childCell))
                         {
-                            shortest_length = found_length;
-                            shortest_path = found_path;
+                            yetToVisit.Enqueue(childCell);
+                            visited.Add(childCell);
                         }
                     }
                 }
-
-                return (shortest_length, shortest_path);
+                return (length, path);
             }
 
             private GameField gameField;
