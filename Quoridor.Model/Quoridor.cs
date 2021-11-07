@@ -130,9 +130,13 @@ namespace Quoridor.Model
             {
                 message += "wall ";
                 List<Cell> cells = action.cells;
-                cells.Sort();
-                message += (cells[3].X + 82);
+                cells.Sort((Cell left, Cell right) => {
+                    int res = left.X.CompareTo(right.X);
+                    return res != 0 ? res : left.Y.CompareTo(right.Y);
+                });
+                message += (char)(cells[3].X + 82);
                 message += (cells[3].Y);
+                message += action.isVertical ? 'v' : 'h';
             }
 
             return message;

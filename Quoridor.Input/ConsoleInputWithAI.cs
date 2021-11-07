@@ -8,8 +8,6 @@ namespace Quoridor.Input
     {
         public void ProcessInput(QuoridorEvents game)
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            Console.WriteLine("Print START to play game");
             var continuePlay = true;
             while (continuePlay)
             {
@@ -30,10 +28,12 @@ namespace Quoridor.Input
                     case "jump":
                         var moveTo = ParseMoveArgument(split[1]);
                         game.MovePlayer(moveTo);
+                        game.MakeBotMove();
                         break;
                     case "wall":
                         var wall = ParseWallPlacingArgument(split[1]);
                         game.TryAddingWall(wall);
+                        game.MakeBotMove();
                         break;
                 }
             }
