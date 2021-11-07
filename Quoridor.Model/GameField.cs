@@ -144,6 +144,7 @@ namespace Quoridor.Model
             }
 
             wallsList.Add(wall);
+            firstPlayer.WallsLeft--;
             return true;
         }
 

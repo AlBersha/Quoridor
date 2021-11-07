@@ -46,6 +46,11 @@ namespace Quoridor.Model
 
         public override bool TryAddingWall(Wall wall)
         {
+            if (CurrentPlayer.WallsLeft < 1)
+            {
+                WrongActivity?.Invoke(false, CurrentPlayer);
+                return false;
+            }
             if (base.TryAddingWall(wall))
             {
                 FieldUpdated?.Invoke(new List<Player>{CurrentPlayer, NextPlayer}, gameField.Walls);
