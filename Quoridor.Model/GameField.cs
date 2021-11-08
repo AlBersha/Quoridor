@@ -61,7 +61,7 @@ namespace Quoridor.Model
             return !cells[from.X, from.Y].Contains(possibleWallCell);
         }
 
-        private bool IsInFieldBorders(Cell cell)
+        public bool IsInFieldBorders(Cell cell)
         {
             return cell.X is >= 0 and <= fieldSize - 1 && cell.Y is >= 0 and <= fieldSize - 1;
         }
